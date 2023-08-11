@@ -152,6 +152,7 @@ public class Model extends Observable {
                                 if (NextMove != null && NextMove.value() == firstValue) {
                                     board.move(column, i, NextMove);
                                     score += firstValue * 2;
+                                    break;
                                 }
                             }
                             changed = true;
