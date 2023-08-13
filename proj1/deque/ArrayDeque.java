@@ -49,7 +49,7 @@ public class ArrayDeque <ANY> {
         size += 1;
     }
 
-    public ANY removeLast(ANY item){
+    public ANY removeLast(){
         if (size == 0){
             return null;
         }
