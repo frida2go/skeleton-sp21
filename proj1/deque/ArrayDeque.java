@@ -8,6 +8,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int nextLast;
     private static final int  INITIAL = 3;
     private static final int MUL = 2;
+    private static final int MINSIZE = 2;
 
     public ArrayDeque() {
         items = (T[]) new Object[INITIAL];
@@ -83,9 +84,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T[] sub;
         float rate = size / items.length;
 
-        if (size == items.length){
+        if (size == items.length) {
             sub = (T[]) new Object[size * MUL];
-        }else if (size > 16 && rate < 0.25) {
+        } else if (size > MINSIZE && rate < 0.25) {
             sub = (T[]) new Object[(int)(size / 2)];
         } else{
             return;

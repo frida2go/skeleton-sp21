@@ -23,7 +23,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         sentinel = new IntNode(null, null, null);
         size = 0;
     }
-    
+
 
     public void addFirst(T item) {
         if (isEmpty()) {
