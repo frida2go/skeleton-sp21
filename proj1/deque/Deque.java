@@ -1,6 +1,6 @@
 package deque;
 
-public interface Deque <ANY> {
+public interface Deque<ANY> {
     void addFirst(ANY item);
     void addLast(ANY item);
     ANY removeFirst();

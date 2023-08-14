@@ -1,16 +1,16 @@
 package deque;
 
-public class ArrayDeque<T> implements Deque<T> {
+import java.util.Iterator;
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private T[] items;
     private int size;
     private int nextFirst;
     private int nextLast;
-    private static final int  initialSize = 3;
-    private static final int mul = 4;
-
+    private static final int  INITIAL = 3;
+    private static final int MUL = 4;
 
     public ArrayDeque() {
-        items = (T[]) new Object[initialSize];
+        items = (T[]) new Object[INITIAL];
         size = 0;
         nextFirst = 0;
         nextLast = 1;
@@ -79,7 +79,7 @@ public class ArrayDeque<T> implements Deque<T> {
 
     public void resize() {
         T[] sub;
-        sub = (T[]) new Object[size * mul];
+        sub = (T[]) new Object[size * MUL];
         for (int i = 0; i < size; i++) {
             sub[i] = items[(nextFirst + 1 + i) % items.length];
         }
@@ -100,6 +100,50 @@ public class ArrayDeque<T> implements Deque<T> {
             temp++;
 
         }
+    }
+
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator();
+    }
+    private class ArrayDequeIterator implements Iterator<T> {
+        private int wizPos;
+
+        public ArrayDequeIterator() {
+            wizPos = 0;
+        }
+        @Override
+        public boolean hasNext() {
+            return wizPos < size;
+        }
+
+        @Override
+        public T next(){
+            T returnItem = get(wizPos);
+            wizPos += 1;
+            return returnItem;
+        }
+    }
+
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+        if (!(other instanceof ArrayDeque<?>)) {
+            return false;
+        }
+        ArrayDeque<T> sub = (ArrayDeque<T>) other;
+        if (sub.size() != this.size){
+            return false;
+        }
+        for (int i = 0; i < this.size; i++) {
+            if (!this.get(i).equals(sub.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
