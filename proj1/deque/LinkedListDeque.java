@@ -67,11 +67,16 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         if (isEmpty()) {
             return null;
         }
-
         IntNode temp = sentinel.previous;
         T item = temp.item;
         sentinel.previous = temp.previous;
-        temp.previous.next = sentinel;
+
+        if (size == 1) {
+            sentinel.next = sentinel;
+        }else {
+            temp.previous.next = sentinel;
+        }
+
         size -= 1;
         return item;
 

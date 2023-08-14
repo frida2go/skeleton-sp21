@@ -8,7 +8,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int nextLast;
     private static final int  INITIAL = 3;
     private static final int MUL = 2;
-    private static final int MINSIZE = 2;
+    private static final int MINSIZE = 16;
 
     public ArrayDeque() {
         items = (T[]) new Object[INITIAL];
@@ -57,19 +57,14 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         nextLast = (items.length + nextLast - 1) % items.length;
         T temp = items[nextLast];
         items[nextLast] = null;
-        size -= 1;
         resize();
+        size -= 1;
         return temp;
     }
 
 
     public int size() {
         return size;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return size == 0;
     }
 
     public T get(int index) {
@@ -80,21 +75,26 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return items[index];
     }
 
-    public void resize() {
+    private void resize() {
         T[] sub;
-        float rate = size / items.length;
+        float rate = (float) (size / items.length);
 
         if (size == items.length) {
             sub = (T[]) new Object[size * MUL];
         } else if (size > MINSIZE && rate < 0.25) {
-            sub = (T[]) new Object[(int)(size / 2)];
-        } else{
+            sub = (T[]) new Object[(int) (size / 2)];
+        } else {
             return;
         }
         for (int i = 0; i < size; i++) {
             sub[i] = items[(nextFirst + 1 + i) % items.length];
         }
-        nextFirst = sub.length - 1;
+
+        if (sub.length >= size) {
+            nextFirst = sub.length - 1;
+        } else {
+            nextFirst = sub.length - 1 - size;
+        }
         nextLast = size;
         items = sub;
     }

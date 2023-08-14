@@ -6,17 +6,15 @@ import static org.junit.Assert.*;
 public class ArrayDequeTest {
     @Test
     public void test() {
-        ArrayDeque<String> lld1 = new ArrayDeque<String>();
-        lld1.addFirst("1");
-        lld1.addLast("who");
-        lld1.addFirst("2");
-        lld1.addLast("who");
-        lld1.addFirst("3");
-        lld1.addLast("who");
-        lld1.addFirst("4");
-
-        int result = 7;
-        assertEquals(result, lld1.size());
+        ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
+        lld1.addFirst(0);
+        lld1.addFirst(1);
+        lld1.removeLast();
+        lld1.addFirst(3);
+        lld1.addFirst(4);
+        lld1.addFirst(5);
+        lld1.addFirst(6);
+        lld1.removeLast();
         lld1.printDeque();
 
     }
