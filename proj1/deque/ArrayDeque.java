@@ -82,7 +82,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (size == items.length) {
             sub = (T[]) new Object[size * MUL];
         } else if (size > MINSIZE && rate < 0.25) {
-            sub = (T[]) new Object[(int) (size / 2)];
+            sub = (T[]) new Object[Math.max(MINSIZE,(int) (size / 2))];
         } else {
             return;
         }
