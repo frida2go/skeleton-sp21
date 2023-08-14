@@ -1,10 +1,11 @@
 package deque;
 
-public class ArrayDeque <ANY> {
+public class ArrayDeque <ANY> implements Deque <ANY> {
     private ANY[] items;
     private int size;
     private int nextFirst;
     private int nextLast;
+
 
     public ArrayDeque(){
         items = (ANY[]) new Object[3];
@@ -18,6 +19,7 @@ public class ArrayDeque <ANY> {
         nextLast = 0;
         size = 1;
     }
+
     public void addFirst(ANY n){
         if (size == items.length){
             resize();
@@ -27,6 +29,7 @@ public class ArrayDeque <ANY> {
         size += 1;
 
     }
+
     public ANY removeFirst(){
         if (size == 0){
             return null;
@@ -60,10 +63,12 @@ public class ArrayDeque <ANY> {
         return temp;
     }
 
+
     public int size(){
         return size;
     }
 
+    @Override
     public boolean isEmpty(){
         return size == 0;
     }
@@ -87,7 +92,7 @@ public class ArrayDeque <ANY> {
         items = sub;
     }
 
-    public void printArrayDeque(){
+    public void printDeque(){
         int temp = 0;
         while (temp < size){
             ANY print = items[(nextFirst + 1 + temp) % items.length];

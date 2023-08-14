@@ -17,7 +17,7 @@ public class ArrayDequeTest {
         lld1.addFirst("4");
 
         assertEquals(7, lld1.size());
-        lld1.printArrayDeque();
+        lld1.printDeque();
 
     }
     @Test
@@ -29,7 +29,7 @@ public class ArrayDequeTest {
         assertEquals(10000,lld2.size());
         int a = lld2.get(9999);
         assertEquals(a,9999);
-        lld2.printArrayDeque();
+        lld2.printDeque();
     }
 
 }
