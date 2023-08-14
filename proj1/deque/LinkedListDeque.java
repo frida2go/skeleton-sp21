@@ -23,15 +23,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         sentinel = new IntNode(null, null, null);
         size = 0;
     }
-
-    public LinkedListDeque(T item) {
-        sentinel = new IntNode(null, null, null);
-        IntNode newly = new IntNode(item, sentinel, sentinel);
-        sentinel.next = newly;
-        sentinel.previous = newly;
-        size += 1;
-
-    }
+    
 
     public void addFirst(T item) {
         if (isEmpty()) {
