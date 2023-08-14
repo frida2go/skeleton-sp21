@@ -77,15 +77,12 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private void resize() {
         T[] sub;
-        int newSize = size;
-        double rate = (double) newSize / items.length;
+        double rate = (double) size / items.length;
 
         if (size == items.length) {
             sub = (T[]) new Object[size * MUL];
-        } else if (size > MINSIZE) {
-            while (rate < 0.25) {
-                newSize = Math.max(MINSIZE, (items.length / 2));
-            }
+        } else if (size > MINSIZE && rate < 0.25) {
+            int newSize = Math.max(MINSIZE, (items.length / 2));
             sub = (T[]) new Object[newSize];
         } else {
             return;
