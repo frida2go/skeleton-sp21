@@ -1,14 +1,14 @@
 package deque;
 
-public interface Deque<ANY> {
-    void addFirst(ANY item);
-    void addLast(ANY item);
-    ANY removeFirst();
-    ANY removeLast();
+public interface Deque<T> {
+    void addFirst(T item);
+    void addLast(T item);
+    T removeFirst();
+    T removeLast();
     default boolean isEmpty() {
         return size() == 0;
     }
     int size();
     void printDeque();
-    ANY  get(int index);
+    T  get(int index);
 }

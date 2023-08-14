@@ -7,7 +7,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int nextFirst;
     private int nextLast;
     private static final int  INITIAL = 3;
-    private static final int MUL = 4;
+    private static final int MUL = 2;
 
     public ArrayDeque() {
         items = (T[]) new Object[INITIAL];
@@ -34,6 +34,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T temp = items[nextFirst];
         items[nextFirst] = null;
         size -= 1;
+        resize();
         return temp;
     }
 
@@ -56,6 +57,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T temp = items[nextLast];
         items[nextLast] = null;
         size -= 1;
+        resize();
         return temp;
     }
 
@@ -79,7 +81,15 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     public void resize() {
         T[] sub;
-        sub = (T[]) new Object[size * MUL];
+        float rate = size / items.length;
+
+        if (size == items.length){
+            sub = (T[]) new Object[size * MUL];
+        }else if (size > 16 && rate < 0.25) {
+            sub = (T[]) new Object[(int)(size / 2)];
+        } else{
+            return;
+        }
         for (int i = 0; i < size; i++) {
             sub[i] = items[(nextFirst + 1 + i) % items.length];
         }
@@ -106,11 +116,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return new ArrayDequeIterator();
     }
     private class ArrayDequeIterator implements Iterator<T> {
-        private int wizPos;
+        private int wizPos = 0;
 
-        public ArrayDequeIterator() {
-            wizPos = 0;
-        }
         @Override
         public boolean hasNext() {
             return wizPos < size;
@@ -131,10 +138,10 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (other == null) {
             return false;
         }
-        if (!(other instanceof ArrayDeque<?>)) {
+        if (!(other instanceof Deque<?>)) {
             return false;
         }
-        ArrayDeque<T> sub = (ArrayDeque<T>) other;
+        Deque sub = (Deque<T>) other;
         if (sub.size() != this.size) {
             return false;
         }
