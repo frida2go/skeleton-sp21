@@ -1,12 +1,11 @@
 package deque;
 
-import edu.princeton.cs.algs4.Stopwatch;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ArrayDequeTest {
     @Test
-    public void Test(){
+    public void test() {
         ArrayDeque<String> lld1 = new ArrayDeque<String>();
         lld1.addFirst("1");
         lld1.addLast("who");
@@ -16,14 +15,15 @@ public class ArrayDequeTest {
         lld1.addLast("who");
         lld1.addFirst("4");
 
-        assertEquals(7, lld1.size());
+        int result = 7;
+        assertEquals(result, lld1.size());
         lld1.printDeque();
 
     }
     @Test
-    public void TestBig(){
+    public void testBig() {
         ArrayDeque<Integer> lld2 = new ArrayDeque<Integer>();
-        for (int i = 0; i < 10000; i++){
+        for (int i = 0; i < 10000; i++) {
             lld2.addLast(i);
         }
         assertEquals(10000,lld2.size());

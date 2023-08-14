@@ -1,27 +1,23 @@
 package deque;
 
-public class ArrayDeque <ANY> implements Deque <ANY> {
-    private ANY[] items;
+public class ArrayDeque<T> implements Deque<T> {
+    private T[] items;
     private int size;
     private int nextFirst;
     private int nextLast;
+    private static final int  initialSize = 3;
+    private static final int mul = 4;
 
 
-    public ArrayDeque(){
-        items = (ANY[]) new Object[3];
+    public ArrayDeque() {
+        items = (T[]) new Object[initialSize];
         size = 0;
         nextFirst = 0;
         nextLast = 1;
     }
-    public void ArrayDeque(ANY n){
-        items[nextFirst] = n;
-        nextFirst = items.length - 1;
-        nextLast = 0;
-        size = 1;
-    }
 
-    public void addFirst(ANY n){
-        if (size == items.length){
+    public void addFirst(T n) {
+        if (size == items.length) {
             resize();
         }
         items[nextFirst] = n;
@@ -30,19 +26,19 @@ public class ArrayDeque <ANY> implements Deque <ANY> {
 
     }
 
-    public ANY removeFirst(){
-        if (size == 0){
+    public T removeFirst() {
+        if (size == 0) {
             return null;
         }
         nextFirst = (nextFirst + 1) % items.length;
-        ANY temp = items[nextFirst];
+        T temp = items[nextFirst];
         items[nextFirst] = null;
         size -= 1;
         return temp;
     }
 
-    public void addLast(ANY item){
-        if (size == items.length){
+    public void addLast(T item) {
+        if (size == items.length) {
             resize();
         }
 
@@ -52,53 +48,53 @@ public class ArrayDeque <ANY> implements Deque <ANY> {
         size += 1;
     }
 
-    public ANY removeLast(){
-        if (size == 0){
+    public T removeLast() {
+        if (size == 0) {
             return null;
         }
         nextLast = (items.length + nextLast - 1) % items.length;
-        ANY temp = items[nextLast];
+        T temp = items[nextLast];
         items[nextLast] = null;
         size -= 1;
         return temp;
     }
 
 
-    public int size(){
+    public int size() {
         return size;
     }
 
     @Override
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return size == 0;
     }
 
-    public ANY get(int index){
-        if (index > size - 1){
+    public T get(int index) {
+        if (index > size - 1) {
             return null;
         }
         index = (nextFirst + index + 1)  % items.length;
         return items[index];
     }
 
-    public void resize(){
-        ANY[] sub;
-        sub = (ANY[]) new Object[size * 4];
-        for (int i = 0; i < size; i ++){
+    public void resize() {
+        T[] sub;
+        sub = (T[]) new Object[size * mul];
+        for (int i = 0; i < size; i++) {
             sub[i] = items[(nextFirst + 1 + i) % items.length];
         }
         nextFirst = sub.length - 1;
-        nextLast = size ;
+        nextLast = size;
         items = sub;
     }
 
-    public void printDeque(){
+    public void printDeque() {
         int temp = 0;
-        while (temp < size){
-            ANY print = items[(nextFirst + 1 + temp) % items.length];
-            if (temp == size - 1){
+        while (temp < size) {
+            T print = items[(nextFirst + 1 + temp) % items.length];
+            if (temp == size - 1) {
                 System.out.print(print);
-            } else{
+            } else {
                 System.out.print(print + " -> ");
             }
             temp++;

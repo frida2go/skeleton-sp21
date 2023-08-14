@@ -1,8 +1,8 @@
 package gh2;
 
-// TODO: uncomment the following import once you're ready to start this portion
+
 // import deque.Deque;
-// TODO: maybe more imports
+
 
 import deque.Deque;
 import deque.ArrayDeque;
@@ -20,10 +20,10 @@ public class GuitarString {
 
     /* Create a guitar string of the given frequency.  */
     public GuitarString(double frequency) {
-        buffer = new ArrayDeque <Double>();
+        buffer = new ArrayDeque<Double>();
         int capacity = (int) Math.round(((double) SR / frequency));
 
-        for (int i = 0; i < capacity; i++){
+        for (int i = 0; i < capacity; i++) {
             buffer.addLast(0.0);
         }
     }
@@ -37,7 +37,7 @@ public class GuitarString {
         //       Math.random() - 0.5 to generate new random numbers for each array index.
 
         ArrayDeque buffer1 = new ArrayDeque<Double>();
-        for (int i = 0; i < buffer.size(); i++){
+        for (int i = 0; i < buffer.size(); i++) {
             double r = Math.random() - 0.5;
             buffer1.addLast(r);
         }

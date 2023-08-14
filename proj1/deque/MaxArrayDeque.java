@@ -2,23 +2,23 @@ package deque;
 
 import java.util.Comparator;
 
-public class MaxArrayDeque <ANY> extends ArrayDeque <ANY> {
-    private Comparator <ANY> comparator;
-    public MaxArrayDeque (Comparator <ANY> c){
+public class MaxArrayDeque<T> extends ArrayDeque<T> {
+    private Comparator<T> comparator;
+    public MaxArrayDeque(Comparator<T> c) {
         comparator = c;
     }
-    public ANY max(Comparator <ANY> c){
-        ANY Max = get(0);
-        for (int i = 0; i < size(); i++){
-            ANY compare = get(i);
-            if (c.compare(Max,compare) < 0){
-                Max = compare;
+    public T max(Comparator<T> c) {
+        T max = get(0);
+        for (int i = 0; i < size(); i++) {
+            T compare = get(i);
+            if (c.compare(max,compare) < 0) {
+                max = compare;
             }
         }
-        return Max;
+        return max;
     }
 
-    public ANY max (){
+    public T max() {
         return max(comparator);
 
     }

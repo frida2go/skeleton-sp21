@@ -1,15 +1,15 @@
 package deque;
 
-public class LinkedListDeque <ANY> {
+public class LinkedListDeque<T> {
     private IntNode sentinel;
     private int size;
 
     private class IntNode {
-        public IntNode previous;
-        public ANY item;
-        public IntNode next;
+        private IntNode previous;
+        private T item;
+        private IntNode next;
 
-        private IntNode(ANY item, IntNode previous, IntNode next) {
+        private IntNode(T item, IntNode previous, IntNode next) {
             this.item = item;
             this.previous = previous;
             this.next = next;
@@ -22,41 +22,41 @@ public class LinkedListDeque <ANY> {
         size = 0;
     }
 
-    public LinkedListDeque(ANY item) {
+    public LinkedListDeque(T item) {
         sentinel = new IntNode(null, null, null);
-        IntNode New = new IntNode(item, sentinel, sentinel);
-        sentinel.next = New;
-        sentinel.previous = New;
+        IntNode newly = new IntNode(item, sentinel, sentinel);
+        sentinel.next = newly;
+        sentinel.previous = newly;
         size += 1;
 
     }
 
-    public void addFirst(ANY item) {
+    public void addFirst(T item) {
         if (isEmpty()) {
             sentinel.next = new IntNode(item, sentinel, sentinel);
             sentinel.previous = sentinel.next;
         } else {
-            IntNode New = new IntNode(item, sentinel, sentinel.next);
-            sentinel.next = New;
-            New.next.previous = New;
+            IntNode newly = new IntNode(item, sentinel, sentinel.next);
+            sentinel.next = newly;
+            newly.next.previous = newly;
 
         }
         size += 1;
     }
 
-    public ANY removeFirst() {
+    public T removeFirst() {
         if (isEmpty()) {
             return null;
         }
         IntNode remove = sentinel.next;
-        ANY item = remove.item;
+        T item = remove.item;
         sentinel.next = remove.next;
         remove.next.previous = sentinel;
         size -= 1;
         return item;
     }
 
-    public void addLast(ANY item) {
+    public void addLast(T item) {
         IntNode temp = new IntNode(item, sentinel.previous, sentinel);
         if (isEmpty()) {
             sentinel.next = temp;
@@ -69,13 +69,13 @@ public class LinkedListDeque <ANY> {
 
     }
 
-    public ANY removeLast() {
+    public T removeLast() {
         if (isEmpty()) {
             return null;
         }
 
         IntNode temp = sentinel.previous;
-        ANY item = temp.item;
+        T item = temp.item;
         sentinel.previous = temp.previous;
         temp.previous.next = sentinel;
         size -= 1;
@@ -94,7 +94,7 @@ public class LinkedListDeque <ANY> {
     public void printDeque() {
         IntNode temp = sentinel.next;
         while (temp != sentinel) {
-            ANY p = temp.item;
+            T p = temp.item;
             if (temp.next == sentinel) {
                 System.out.print(p);
             } else {
@@ -104,7 +104,7 @@ public class LinkedListDeque <ANY> {
         }
     }
 
-    public ANY get(int index) {
+    public T get(int index) {
         if (index + 1 > size || index < 0) {
             return null;
         }
@@ -115,21 +115,21 @@ public class LinkedListDeque <ANY> {
         }
         return temp.item;
     }
-    public ANY getRecursive(int index){
+    public T getRecursive(int index) {
         if (index + 1 > size || index < 0) {
             return null;
         }
         return rHelper(index, sentinel);
 
     }
-    private ANY rHelper(int index, IntNode n){
-        if (index == 0){
+    private T rHelper(int index, IntNode n) {
+        if (index == 0) {
             return n.next.item;
         }
         return rHelper(index - 1, n.next);
     }
-    public boolean equals(Object o){
-        if (! (o instanceof LinkedListDeque)){
+    public boolean equals(Object o) {
+        if (!(o instanceof LinkedListDeque)) {
             return false;
         }
         return true;
