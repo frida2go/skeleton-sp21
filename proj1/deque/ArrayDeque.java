@@ -117,7 +117,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
 
         @Override
-        public T next(){
+        public T next() {
             T returnItem = get(wizPos);
             wizPos += 1;
             return returnItem;
@@ -135,7 +135,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             return false;
         }
         ArrayDeque<T> sub = (ArrayDeque<T>) other;
-        if (sub.size() != this.size){
+        if (sub.size() != this.size) {
             return false;
         }
         for (int i = 0; i < this.size; i++) {

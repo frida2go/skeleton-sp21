@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class LinkedListDeque<T> implements Iterable{
+public class LinkedListDeque<T> implements Iterable {
     private IntNode sentinel;
     private int size;
 
@@ -121,7 +121,7 @@ public class LinkedListDeque<T> implements Iterable{
         }
 
         @Override
-        public T next(){
+        public T next() {
             T returnItem = get(wizPos);
             wizPos += 1;
             return returnItem;
