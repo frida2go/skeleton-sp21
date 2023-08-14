@@ -57,8 +57,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         nextLast = (items.length + nextLast - 1) % items.length;
         T temp = items[nextLast];
         items[nextLast] = null;
-        resize();
         size -= 1;
+        resize();
         return temp;
     }
 
@@ -77,13 +77,16 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private void resize() {
         T[] sub;
-        double rate = (double) size / items.length;
+        int newSize = size;
+        double rate = (double) newSize / items.length;
 
         if (size == items.length) {
             sub = (T[]) new Object[size * MUL];
-        } else if (size > MINSIZE && rate < 0.25) {
-            int size1 = Math.max(MINSIZE, (items.length / 2));
-            sub = (T[]) new Object[size1];
+        } else if (size > MINSIZE) {
+            while (rate < 0.25){
+                newSize = Math.max(MINSIZE, (items.length / 2));
+            }
+            sub = (T[]) new Object[newSize];
         } else {
             return;
         }
@@ -91,11 +94,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             sub[i] = get(i);
         }
 
-        if (sub.length >= size) {
-            nextFirst = sub.length - 1;
-        } else {
-            nextFirst = sub.length - 1 - size;
-        }
+        nextFirst = sub.length - 1;
         nextLast = size;
         items = sub;
     }
