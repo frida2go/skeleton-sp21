@@ -2,6 +2,8 @@ package capers;
 
 import java.io.File;
 
+import static capers.CapersRepository.celebrateBirthday;
+import static capers.CapersRepository.makeDog;
 import static capers.Utils.*;
 
 /** Canine Capers: A Gitlet Prelude.
@@ -52,11 +54,12 @@ public class Main {
             break;
         case "dog":
             validateNumArgs("dog", args, 4);
-            // TODO: make a dog
+            makeDog(args[1], args[2], Integer.parseInt(args[3]));
             break;
         case "birthday":
             validateNumArgs("birthday", args, 2);
             // TODO: celebrate this dog's birthday
+            celebrateBirthday(args[1]);
             break;
         default:
             exitWithError(String.format("Unknown command: %s", args[0]));
