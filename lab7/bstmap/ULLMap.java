@@ -67,7 +67,7 @@ public class ULLMap<K, V>  implements Map61B<K, V> {
 
     /** Keys and values are stored in a linked list of Entry objects.
      *  This variable stores the first pair in this linked list. */
-    private Entry list;
+    public Entry list;
 
     /** Represents one node in the linked list that stores the key-value pairs
      *  in the dictionary. */
