@@ -1,6 +1,6 @@
 package hashmap;
 
-import java.util.Collection;
+import java.util.*;
 
 /**
  *  A hash table-backed Map implementation. Provides amortized constant time
@@ -27,10 +27,15 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     /* Instance Variables */
     private Collection<Node>[] buckets;
+    private int initialSize = 16;
+    private double loadFactor;
+    private double maxLoad;
+    private int size = 0;
+    private static final Object NULL_VALUE = new Object();
     // You should probably define some more!
 
     /** Constructors */
-    public MyHashMap() { }
+    public MyHashMap() { this(16,0.75);}
 
     public MyHashMap(int initialSize) { }
 
@@ -41,13 +46,20 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * @param initialSize initial size of backing array
      * @param maxLoad maximum load factor
      */
-    public MyHashMap(int initialSize, double maxLoad) { }
+    public MyHashMap(int initialSize, double maxLoad)
+    {
+        buckets = (Collection<Node>[]) new Collection[initialSize];
+        for (int i = 0; i < initialSize; i++) {
+            buckets[i] = createBucket();
+        }
+        this.maxLoad = maxLoad;
+    }
 
     /**
      * Returns a new node to be placed in a hash table bucket
      */
     private Node createNode(K key, V value) {
-        return null;
+        return new Node(key,value);
     }
 
     /**
@@ -69,7 +81,11 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * OWN BUCKET DATA STRUCTURES WITH THE NEW OPERATOR!
      */
     protected Collection<Node> createBucket() {
-        return null;
+        return new LinkedList<>();
+    }
+
+    private int loadFactor (){
+        return size / buckets.length;
     }
 
     /**
@@ -87,5 +103,104 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     // TODO: Implement the methods of the Map61B Interface below
     // Your code won't compile until you do so!
+
+    @Override
+    public void clear() {
+        this.size = 0;
+        for (int i = 0; i < buckets.length; i++){
+            buckets[i] = createBucket();
+        }
+    }
+
+    @Override
+    public boolean containsKey(K key) {
+        return findNode(key) != null;
+    }
+
+    @Override
+    public V get(K key) {
+        Node node = findNode(key);
+        return findNode(key) == null ? null : node.value;
+    }
+
+    public Node findNode(K key) {
+        if (key != null){
+            int hashCode = hashCode(key);
+            Collection<Node> bucket = buckets[hashCode];
+            for (Node node: bucket) {
+                if (node.key.equals(key)) {
+                    return node;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public void put(K key, V value) {
+        int hashcode = hashCode(key);
+        for (Node node: buckets[hashcode]) {
+            if (node.key.equals(key)) {
+                node.value = value;
+                return;
+            }
+        }
+        Node node = new Node(key,value);
+        buckets[hashcode].add(node);
+        this.size += 1;
+    }
+
+    @Override
+    public Set<K> keySet() {
+        Set<K> keys = new HashSet<>();
+        for(Collection<Node> bucket: buckets) {
+            for (Node node: bucket) {
+                keys.add(node.key);
+            }
+        }
+        return keys;
+    }
+
+    @Override
+    public Iterator<K> iterator() {
+        Set<K> keyset = keySet();
+        return keyset.iterator();
+    }
+
+    @Override
+    public V remove(K key) {
+        int hash = hashCode(key);
+        for (Node node: buckets[hash]){
+            if (node.key.equals(key)){
+                V value = node.value;
+                buckets[hash].remove(node);
+                size -= 1;
+                return value;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public V remove(K key, V value) {
+        if (findNode(key).value == value){
+            remove(key);
+            size-= 1;
+            return value;
+        }
+        return null;
+    }
+
+    private int hashCode(K key) {
+        return key == null ? 0 : Math.abs(key.hashCode()) % initialSize;
+    }
+
+
+
 
 }
