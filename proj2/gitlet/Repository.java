@@ -9,19 +9,24 @@ import static gitlet.Utils.*;
 
 // TODO: any imports you need here
 
-/** Represents a gitlet repository.
+/**
+ * Represents a gitlet repository.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ * @author TODO
  */
 public class Repository {
     private String HEAD = "master";
     private static StagingArea stage;
 
-    /** The current working directory. */
+    /**
+     * The current working directory.
+     */
     public static final File CWD = new File(System.getProperty("user.dir"));
-    /** The .gitlet directory. */
+    /**
+     * The .gitlet directory.
+     */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
     public static final File BRANCHES_DIR = join(GITLET_DIR, "branches");
@@ -30,8 +35,8 @@ public class Repository {
     public static final File LOG_DIR = join(GITLET_DIR, "log");
 
     /* TODO: fill in the rest of this class. */
-    public static void initCommand(){
-        if (GITLET_DIR.exists()){
+    public static void initCommand() {
+        if (GITLET_DIR.exists()) {
             message("A Gitlet version-control system already exists in the current directory.");
             return;
         }
@@ -45,21 +50,22 @@ public class Repository {
 
         //将init的commit以object形式写入commit文件夹
         Commit initCommit = new Commit();
-        File initCommitFile = join(COMMITS_DIR,initCommit.getSelfHash());
-        Utils.writeObject(initCommitFile,initCommit);
+        File initCommitFile = join(COMMITS_DIR, initCommit.getSelfHash());
+        Utils.writeObject(initCommitFile, initCommit);
 
         //将init commit HASH以String形式写入branches / master 文件
-        File MasterFile = join(BRANCHES_DIR,"master");
-        Utils.writeContents(MasterFile,initCommit.getSelfHash());
+        File MasterFile = join(BRANCHES_DIR, "master");
+        Utils.writeContents(MasterFile, initCommit.getSelfHash());
 
         File HeadFile = join(BRANCHES_DIR, "head");
-        Utils.writeContents(HeadFile,"master");
+        Utils.writeContents(HeadFile, "master");
 
     }
-    public static void addFiles(String filename){
-        File filePath = join(CWD,filename);
+
+    public static void addFiles(String filename) {
+        File filePath = join(CWD, filename);
         //检查想add的文件是否存在
-        if (!filePath.exists()){
+        if (!filePath.exists()) {
             System.out.println("File not exist.");
             return;
         }
@@ -71,7 +77,7 @@ public class Repository {
         // 将文件的byte 写入Blob文件夹
         File blobFile = join(BLOBS_DIR, fileHash);
         if (!blobFile.exists()) {
-            writeContents(blobFile,fileContents);
+            writeContents(blobFile, fileContents);
         }
 
 
@@ -94,13 +100,13 @@ public class Repository {
             stage.add(filename, fileHash);
         }
 
-        writeObject(stagingFile,stage);
+        writeObject(stagingFile, stage);
     }
 
     public static void createCommit(String message) {
         File stagingFile = join(STAGING_DIR, "stage");
-
         stage = Utils.readObject(stagingFile, StagingArea.class);
+
         if (stage.getAddedFiles().isEmpty()
                 && stage.getRemovedFiles().isEmpty()) {
             System.out.println("No changes added to commit");
@@ -116,12 +122,12 @@ public class Repository {
         List<String> parentList = new ArrayList<>();
 
         // 将current commit 加到即将创建的commit的 parent list
-        if(currentCommit != null) {
+        if (currentCommit != null) {
             parentList.add(currentCommit.getSelfHash());
         }
 
         //获取现在有的File list，并将stage add的文件加入这个File list
-        HashMap<String,String> currentFileList =
+        HashMap<String, String> currentFileList =
                 new HashMap<>(currentCommit.getFile());
         currentFileList.putAll(stage.getAddedFiles());
 
@@ -131,16 +137,14 @@ public class Repository {
         }
 
         //将commit写入文件夹
-        Commit newCommit = new Commit(message,parentList,currentFileList);
+        Commit newCommit = new Commit(message, parentList, currentFileList);
         writeCommit(newCommit);
 
         updateBranch(newCommit.getSelfHash());
 
         //清空stage现有文件；
         stage.clear();
-        writeObject(stagingFile,stage);
-
-
+        writeObject(stagingFile, stage);
 
     }
 
@@ -150,13 +154,95 @@ public class Repository {
         String activeBranch = Utils.readContentsAsString(headFile);
 
         File branchFile = join(BRANCHES_DIR, activeBranch);
-        Utils.writeContents(branchFile,newCommitHash);
+        Utils.writeContents(branchFile, newCommitHash);
     }
 
     //将commit object写入文件
     private static void writeCommit(Commit newCommit) {
-        File commitFile = join(COMMITS_DIR,newCommit.getSelfHash());
-        Utils.writeObject(commitFile,newCommit);
+        File commitFile = join(COMMITS_DIR, newCommit.getSelfHash());
+        Utils.writeObject(commitFile, newCommit);
+    }
+
+    public static void rmFile(String filename) {
+        File stagingFile = join(STAGING_DIR, "stage");
+        stage = Utils.readObject(stagingFile, StagingArea.class);
+        boolean isStaged = stage.getAddedFiles().containsKey(filename);
+
+        Commit current = getCurrentCommit();
+        boolean isTracked = current.getFile().containsKey(filename);
+
+        if (!isTracked && !isStaged) {
+            System.out.println("No reason to remove the file.");
+            return;
+        }
+
+        if (isStaged) {
+            stage.getAddedFiles().remove(filename);
+        }
+
+        if (isTracked) {
+            stage.addToRemovedFiles(filename);
+            File fileToRemove = join(CWD, filename);
+
+            if (fileToRemove.exists()) {
+                Utils.restrictedDelete(fileToRemove);
+            }
+        }
+
+        Utils.writeContents(stagingFile, stage);
+
+    }
+
+    public static void log() {
+        Commit current = getCurrentCommit();
+
+        while (current != null) {
+            printCommit(current);
+
+            if (!current.getParentList().isEmpty()) {
+                current = getCommitFromHash(current.getParentList().get(0));
+            } else {
+                current = null;
+            }
+
+        }
+    }
+
+    public static void globLog() {
+
+        for (String file : Utils.plainFilenamesIn(COMMITS_DIR)) {
+            File commitFile = join(COMMITS_DIR, file);
+            Commit commit = readObject(commitFile, Commit.class);
+
+            printCommit(commit);
+        }
+    }
+
+    public static void printCommit(Commit commit) {
+        System.out.println("===");
+        System.out.println("commit: " + commit.getSelfHash());
+
+        List<String> parent = commit.getParentList();
+        if (parent.size() > 1) {
+            String firstParent = parent.get(0).substring(0, 7);
+            String secondParent = parent.get(1).substring(0, 7);
+            System.out.println("Merge: " + firstParent + " " + secondParent);
+        }
+
+        System.out.println("Date: " + commit.getTimestamp());
+        System.out.println(commit.getMessage());
+        System.out.println();
+
+    }
+
+    public static Commit getCommitFromHash(String hash) {
+        File CommitFile = join(COMMITS_DIR, hash);
+
+        if (CommitFile.exists()) {
+            return readObject(CommitFile, Commit.class);
+        }
+
+        return null;
     }
 
     public static Commit getCurrentCommit() {

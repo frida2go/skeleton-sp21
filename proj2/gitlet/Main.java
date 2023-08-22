@@ -4,22 +4,25 @@ import java.util.HashMap;
 
 import static gitlet.Repository.*;
 
-/** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+/**
+ * Driver class for Gitlet, a subset of the Git version-control system.
+ *
+ * @author TODO
  */
 public class Main {
 
-    /** Usage: java gitlet.Main ARGS, where ARGS contains
-     *  <COMMAND> <OPERAND1> <OPERAND2> ...
-     *  If a user doesn’t input any arguments,
-     *  print the message Please enter a command. and exit.
-     *
+    /**
+     * Usage: java gitlet.Main ARGS, where ARGS contains
+     * <COMMAND> <OPERAND1> <OPERAND2> ...
+     * If a user doesn’t input any arguments,
+     * print the message Please enter a command. and exit.
+     * <p>
      * If a user inputs a command that doesn’t exist,
      * print the message No command with that name exists. and exit.
-     *
+     * <p>
      * If a user inputs a command with the wrong number or format of operands,
      * print the message Incorrect operands. and exit.
-     *
+     * <p>
      * If a user inputs a command that requires being
      * in an initialized Gitlet working directory
      * (i.e., one containing a .gitlet subdirectory), but is not in such a directory,
@@ -33,21 +36,32 @@ public class Main {
         }
 
         String firstArg = args[0];
-        switch(firstArg) {
+        switch (firstArg) {
             case "init":
-                isValidArgument(args,1);
+                isValidArgument(args, 1);
                 initCommand();
                 break;
             case "add":
-                isValidArgument(args,2);
+                isValidArgument(args, 2);
                 addFiles(args[1]);
                 break;
             case "commit":
                 isValidArgument(args, 2);
                 createCommit(args[1]);
                 break;
+            case "rm":
+                isValidArgument(args, 2);
+                rmFile(args[1]);
+                break;
+            case "log":
+                isValidArgument(args, 1);
+                log();
+                break;
+            case "global-log":
+                isValidArgument(args, 1);
+                globLog();
+                break;
         }
-
 
 
     }

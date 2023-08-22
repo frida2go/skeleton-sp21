@@ -5,15 +5,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class StagingArea implements Serializable {
-    private HashMap<String,String> addedFiles;
+    private HashMap<String, String> addedFiles;
     private ArrayList<String> removedFiles;
 
-    public StagingArea(){
+    public StagingArea() {
         this.addedFiles = new HashMap<>();
         this.removedFiles = new ArrayList<>();
     }
 
-    public void add(String filename, String sha1){
+    public void add(String filename, String sha1) {
         if (removedFiles.contains(filename)) {
             removedFiles.remove(filename);
         }
@@ -21,7 +21,7 @@ public class StagingArea implements Serializable {
     }
 
     public void addToRemovedFiles(String fileName) {
-        if (addedFiles.containsKey(fileName)){
+        if (addedFiles.containsKey(fileName)) {
             addedFiles.remove(fileName);
         }
         removedFiles.add(fileName);
@@ -32,7 +32,7 @@ public class StagingArea implements Serializable {
         removedFiles.clear();
     }
 
-    public HashMap<String,String> getAddedFiles() {
+    public HashMap<String, String> getAddedFiles() {
         return new HashMap<>(addedFiles);
     }
 

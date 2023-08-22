@@ -9,11 +9,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-/** Represents a gitlet commit object.
+/**
+ * Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ * @author TODO
  */
 public class Commit implements Serializable {
     /**
@@ -24,16 +25,18 @@ public class Commit implements Serializable {
      * variable is used. We've provided one example for `message`.
      */
 
-    /** The message of this Commit. */
+    /**
+     * The message of this Commit.
+     */
     private String message;
     private String selfHash;
     public Date timestamp;
     private List<String> parentList;
-    public HashMap <String, String> fileToBlobMap;
+    public HashMap<String, String> fileToBlobMap;
 
 
     /* TODO: fill in the rest of this class. */
-    public Commit(String message,List<String> parents,HashMap<String, String> blob) {
+    public Commit(String message, List<String> parents, HashMap<String, String> blob) {
         this.message = message;
         this.parentList = parents;
         this.fileToBlobMap = blob;
@@ -42,7 +45,7 @@ public class Commit implements Serializable {
     }
 
     // Constructor for the initial commit
-    public Commit(){
+    public Commit() {
         this.message = "initial commit";
         this.parentList = new ArrayList<>();
         this.fileToBlobMap = new HashMap<>();
@@ -50,21 +53,22 @@ public class Commit implements Serializable {
         this.selfHash = generateID();
     }
 
-    private String generateID(){
+    private String generateID() {
         byte[] commitObject = Utils.serialize(this);
         return Utils.sha1(commitObject);
     }
 
-    public String getMessage(){
+    public String getMessage() {
         return this.message;
     }
+
     public String getTimestamp() {
         // Thu Jan 1 00:00:00 1970 +0000
         DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
         return dateFormat.format(timestamp);
     }
 
-    public String getSelfHash(){
+    public String getSelfHash() {
         return this.selfHash;
     }
 
