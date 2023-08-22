@@ -61,6 +61,15 @@ public class Main {
                 isValidArgument(args, 1);
                 globLog();
                 break;
+            case "find":
+                isValidArgument(args, 2);
+                find(args[1]);
+                break;
+            case "status":
+                isValidArgument(args, 1);
+                status();
+                break;
+
         }
 
 

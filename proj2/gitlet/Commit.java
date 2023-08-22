@@ -28,10 +28,10 @@ public class Commit implements Serializable {
     /**
      * The message of this Commit.
      */
-    private String message;
-    private String selfHash;
+    private final String message;
+    private final String selfHash;
     public Date timestamp;
-    private List<String> parentList;
+    private final List<String> parentList;
     public HashMap<String, String> fileToBlobMap;
 
 
@@ -77,7 +77,10 @@ public class Commit implements Serializable {
     }
 
     public HashMap<String, String> getFile() {
-        return new HashMap<>(fileToBlobMap);
+        if (fileToBlobMap != null) {
+            return new HashMap<>(fileToBlobMap);
+        }
+        return null;
     }
 }
 

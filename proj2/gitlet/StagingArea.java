@@ -17,7 +17,7 @@ public class StagingArea implements Serializable {
         if (removedFiles.contains(filename)) {
             removedFiles.remove(filename);
         }
-        addedFiles.put(sha1, filename);
+        addedFiles.put(filename, sha1);
     }
 
     public void addToRemovedFiles(String fileName) {
@@ -37,8 +37,17 @@ public class StagingArea implements Serializable {
     }
 
     public ArrayList<String> getRemovedFiles() {
-        return new ArrayList<>(removedFiles);
+        return removedFiles;
     }
+
+    public ArrayList<String> getStagedFiles() {
+        return new ArrayList<>(addedFiles.keySet());
+    }
+
+    public void removeAddedFile(String filename){
+        addedFiles.remove(filename);
+    }
+
 
 
 }

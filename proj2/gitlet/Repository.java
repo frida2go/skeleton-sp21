@@ -1,9 +1,7 @@
 package gitlet;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -80,15 +78,8 @@ public class Repository {
             writeContents(blobFile, fileContents);
         }
 
-
         // 检测Staging Area 是否存在，不存在则创建一个
-        File stagingFile = join(STAGING_DIR, "stage");
-        if (stagingFile.exists()) {
-            stage = Utils.readObject(stagingFile, StagingArea.class);
-        } else {
-            stage = new StagingArea();
-        }
-
+        StagingArea stage = getStage();
         Commit currentCommit = getCurrentCommit();
 
         //如果现在的Commit的文件列表已经有了要添加的文件（名字），并且内容也完全相同，则将
@@ -100,12 +91,11 @@ public class Repository {
             stage.add(filename, fileHash);
         }
 
-        writeObject(stagingFile, stage);
+        writeStage(stage);
     }
 
     public static void createCommit(String message) {
-        File stagingFile = join(STAGING_DIR, "stage");
-        stage = Utils.readObject(stagingFile, StagingArea.class);
+        StagingArea stage = getStage();
 
         if (stage.getAddedFiles().isEmpty()
                 && stage.getRemovedFiles().isEmpty()) {
@@ -113,7 +103,7 @@ public class Repository {
             return;
         }
 
-        if (message == "") {
+        if (message.isEmpty()) {
             System.out.println("Please enter a commit message.");
         }
 
@@ -124,27 +114,28 @@ public class Repository {
         // 将current commit 加到即将创建的commit的 parent list
         if (currentCommit != null) {
             parentList.add(currentCommit.getSelfHash());
+
+            //获取现在有的File list，并将stage add的文件加入这个File list
+            if (currentCommit.getFile() != null) {
+                HashMap<String, String> currentFileList =
+                        new HashMap<>(currentCommit.getFile());
+                currentFileList.putAll(stage.getAddedFiles());
+
+                // 删除掉在stage remove区域的files
+                for (String removeFile : stage.getRemovedFiles()) {
+                    currentFileList.remove(removeFile);
+                }
+
+                //将commit写入文件夹
+                Commit newCommit = new Commit(message, parentList, currentFileList);
+                writeCommit(newCommit);
+                updateBranch(newCommit.getSelfHash());
+            }
         }
-
-        //获取现在有的File list，并将stage add的文件加入这个File list
-        HashMap<String, String> currentFileList =
-                new HashMap<>(currentCommit.getFile());
-        currentFileList.putAll(stage.getAddedFiles());
-
-        // 删除掉在stage remove区域的files
-        for (String removeFile : stage.getRemovedFiles()) {
-            currentFileList.remove(removeFile);
-        }
-
-        //将commit写入文件夹
-        Commit newCommit = new Commit(message, parentList, currentFileList);
-        writeCommit(newCommit);
-
-        updateBranch(newCommit.getSelfHash());
 
         //清空stage现有文件；
         stage.clear();
-        writeObject(stagingFile, stage);
+        writeStage(stage);
 
     }
 
@@ -164,8 +155,7 @@ public class Repository {
     }
 
     public static void rmFile(String filename) {
-        File stagingFile = join(STAGING_DIR, "stage");
-        stage = Utils.readObject(stagingFile, StagingArea.class);
+        StagingArea stage = getStage();
         boolean isStaged = stage.getAddedFiles().containsKey(filename);
 
         Commit current = getCurrentCommit();
@@ -177,7 +167,7 @@ public class Repository {
         }
 
         if (isStaged) {
-            stage.getAddedFiles().remove(filename);
+            stage.removeAddedFile(filename);
         }
 
         if (isTracked) {
@@ -189,7 +179,7 @@ public class Repository {
             }
         }
 
-        Utils.writeContents(stagingFile, stage);
+        writeStage(stage);
 
     }
 
@@ -209,12 +199,14 @@ public class Repository {
     }
 
     public static void globLog() {
+        List<String> filenames = Utils.plainFilenamesIn(COMMITS_DIR);
+        if (filenames != null) {
+            for (String file : filenames) {
+                File commitFile = join(COMMITS_DIR, file);
+                Commit commit = readObject(commitFile, Commit.class);
 
-        for (String file : Utils.plainFilenamesIn(COMMITS_DIR)) {
-            File commitFile = join(COMMITS_DIR, file);
-            Commit commit = readObject(commitFile, Commit.class);
-
-            printCommit(commit);
+                printCommit(commit);
+            }
         }
     }
 
@@ -235,7 +227,113 @@ public class Repository {
 
     }
 
-    public static Commit getCommitFromHash(String hash) {
+    public static void find(String message) {
+        boolean found = false;
+        List<String> filename = Utils.plainFilenamesIn(COMMITS_DIR);
+
+        if (filename != null) {
+            for (String file : filename) {
+                File commitFile = join(COMMITS_DIR, file);
+                Commit commit = readObject(commitFile, Commit.class);
+
+                if (commit.getMessage().equals(message)) {
+                    found = true;
+                    System.out.println(commit.getSelfHash());
+                }
+            }
+        }
+
+        if (!found) {
+            System.out.println("Found no commit with that message.");
+        }
+    }
+
+    public static void status() {
+        List<String> branches = getBranches();
+        List<String> filesInCWD = plainFilenamesIn(CWD);
+        String currentBranches = getCurrentBranches();
+        StagingArea stage = getStage();
+
+        Commit currentCommit = getCurrentCommit();
+        HashMap<String, String> currentFiles = currentCommit.getFile();
+
+        System.out.println("=== Branches ===");
+        for (String branch : branches) {
+            if (branch.equals(currentBranches)) {
+                System.out.println("*" + currentBranches);
+            } else {
+                System.out.println(branch);
+            }
+        }
+
+        System.out.println();
+
+        ArrayList<String> addedFiles = stage.getStagedFiles();
+        Collections.sort(addedFiles);
+
+        System.out.println("=== Staged Files ===");
+        for (String filename : addedFiles) {
+            System.out.println(filename);
+        }
+
+        System.out.println();
+
+        // Display Removed Files
+        ArrayList<String> removedFiles = stage.getRemovedFiles();
+        Collections.sort(removedFiles);
+
+        System.out.println("=== Removed Files ===");
+        for (String file : removedFiles) {
+            System.out.println(file);
+        }
+
+        System.out.println();
+
+        List<String> modifiedNotStaged = new ArrayList<>();
+        List<String> untrackedFiles = new ArrayList<>();
+
+        for (String file : filesInCWD) {
+
+            // 是否在缓存区？ 是否被commit追踪？ 是否修改过？
+            boolean isStaged = stage.getAddedFiles().containsKey(file);
+            boolean isTracked = currentFiles.containsKey(file);
+            boolean isModified = isFileModified(file, currentFiles.get(file));
+
+            //如果在缓存区，且修改过
+            if (isStaged && isModified) {
+                modifiedNotStaged.add(file + " (modified)");
+
+                //如果在缓存区，但是文件已经不存在了（删除）
+            } else if (isStaged && !join(CWD, file).exists()) {
+                modifiedNotStaged.add(file + " (deleted)");
+
+                // 如果在现在commit，修改过了，但不在缓存区
+            } else if (isTracked && isModified && !isStaged) {
+                modifiedNotStaged.add(file + " (modified)");
+
+                //既不在缓存区又没有被现在commit tracked
+            } else if (!isStaged && !isTracked) {
+                untrackedFiles.add(file);
+            }
+
+        }
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        for (String file : modifiedNotStaged) {
+            System.out.println(file);
+        }
+        System.out.println();
+
+        System.out.println("=== Untracked Files ===");
+        for (String file : untrackedFiles) {
+            System.out.println(file);
+        }
+        System.out.println();
+
+
+    }
+
+    private static Commit getCommitFromHash(String hash) {
         File CommitFile = join(COMMITS_DIR, hash);
 
         if (CommitFile.exists()) {
@@ -245,7 +343,7 @@ public class Repository {
         return null;
     }
 
-    public static Commit getCurrentCommit() {
+    private static Commit getCurrentCommit() {
         File HeadFile = join(BRANCHES_DIR, "head");
         String currentBranch = Utils.readContentsAsString(HeadFile);
 
@@ -254,6 +352,49 @@ public class Repository {
 
         File commitFile = join(COMMITS_DIR, commitHash);
         return readObject(commitFile, Commit.class);
+    }
+
+    private static String getCurrentBranches() {
+        File headFile = join(BRANCHES_DIR, "head");
+        if (headFile.exists()) {
+            return Utils.readContentsAsString(headFile);
+        }
+
+        return null;
+    }
+
+    private static List<String> getBranches() {
+        List<String> branches = Utils.plainFilenamesIn(BRANCHES_DIR);
+        if (branches == null) {
+            return new ArrayList<>();
+        }
+
+        List<String> mutableBranches = new ArrayList<>(branches);
+        mutableBranches.remove("head");
+        return mutableBranches;
+    }
+
+    private static StagingArea getStage() {
+        File stagingFile = join(STAGING_DIR, "stage");
+        if (stagingFile.exists()) {
+            return Utils.readObject(stagingFile, StagingArea.class);
+        } else {
+            return new StagingArea();
+        }
+    }
+
+    private static void writeStage(StagingArea stage) {
+        File stagingFile = join(STAGING_DIR, "stage");
+        Utils.writeObject(stagingFile, stage);
+    }
+
+    private static boolean isFileModified(String filename, String fileHash) {
+        File file = new File(CWD, filename);
+        if (file.exists()) {
+            String currentHash = Utils.sha1(Utils.readContents(file));
+            return !currentHash.equals(fileHash);
+        }
+        return false;
     }
 
 
