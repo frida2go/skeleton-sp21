@@ -212,7 +212,7 @@ public class Repository {
 
     public static void printCommit(Commit commit) {
         System.out.println("===");
-        System.out.println("commit: " + commit.getSelfHash());
+        System.out.println("commit " + commit.getSelfHash());
 
         List<String> parent = commit.getParentList();
         if (parent.size() > 1) {
