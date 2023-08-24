@@ -299,11 +299,11 @@ public class Repository {
         }
 
         out.println("=== Modifications Not Staged For Commit ===");
-        modifiedNotStaged.forEach(out::println);
+        //modifiedNotStaged.forEach(out::println);
         out.println();
 
         out.println("=== Untracked Files ===");
-        untrackedFiles.forEach(out::println);
+        //untrackedFiles.forEach(out::println);
         out.println();
 
     }
