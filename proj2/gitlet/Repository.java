@@ -469,9 +469,6 @@ public class Repository {
         HashMap<String, String> commitsFiles = commit.getFile();
 
         // Checkout all required files from the commit.
-        for (String filename : commitsFiles.keySet()) {
-            checkoutFile(filename, commitHash);
-        }
 
         Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
         Set<String> currentAndStagedFiles = getCurrentAndStagedFiles(stage);
