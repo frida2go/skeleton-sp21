@@ -457,39 +457,46 @@ public class Repository {
         branchToRemove.delete();
     }
 
-    public static void reset(String commitHash) {
-        Commit commit = getCommitFromHash(commitHash);
-        StagingArea stage = getStage();
+    public static void reset(String commitID) {
+        
+        Commit targetCommit = getCommitFromHash(commitID);
 
-        if (commit == null) {
+        if (targetCommit == null) {
             System.out.println("No commit with that id exists.");
             return;
         }
 
-        HashMap<String, String> commitsFiles = commit.getFile();
+        List<String> cwdFiles = plainFilenamesIn(CWD);
+        Set<String> targetCommitFiles = targetCommit.getFile().keySet();
+        Set<String> currentCommitFiles = getCurrentCommit().getFile().keySet();
 
-        // Checkout all required files from the commit.
-
-        Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
-        Set<String> currentAndStagedFiles = getCurrentAndStagedFiles(stage);
-
-        for (String filename : commitsFiles.keySet()) {
-            if (!currentAndStagedFiles.contains(filename) && cwdFiles.contains(filename)) {
+        for (String file : cwdFiles) {
+            if (!currentCommitFiles.contains(file) && targetCommitFiles.contains(file)) {
                 System.out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
                 return;
             }
         }
 
-        for (String filename : cwdFiles) {
-            if (!commitsFiles.containsKey(filename)) {
-                File fileToRemove = join(CWD, filename);
-                if (fileToRemove.exists()) {
-                    restrictedDelete(fileToRemove);
-                }
+        // Update files in the working directory to match the target commit
+        for (String file : targetCommitFiles) {
+            checkoutFile(file, commitID);
+        }
+
+        // Remove files that are in the current commit but not in the target commit
+        for (String file : currentCommitFiles) {
+            if (!targetCommitFiles.contains(file)) {
+                File fileToRemove = join(CWD, file);
+                fileToRemove.delete();
             }
         }
+
+        // Set the current branch's pointer to the target commit
+        String currentBranch = getCurrentBranches();
+        File branchPointer = join(BRANCHES_DIR, currentBranch);
+        writeContents(branchPointer, commitID);
     }
+
 
     private static Commit getCommitFromHash(String hash) {
         List<String> allCommits = plainFilenamesIn(COMMITS_DIR);
