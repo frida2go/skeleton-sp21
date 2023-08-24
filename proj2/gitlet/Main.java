@@ -30,7 +30,6 @@ public class Main {
      * print the message Not in an initialized Gitlet directory.
      */
     public static void main(String[] args) {
-        // TODO: what if args is empty?
         if (args.length == 0) {
             Utils.message("Please enter a command.");
             System.exit(0);

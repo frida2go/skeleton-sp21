@@ -404,7 +404,7 @@ public class Repository {
         }
 
         for (String file : checkBranchFiles) {
-            checkoutFile(file, null);
+            checkoutFile(file, getBranchHead(branchName).getSelfHash());
         }
 
         for (String file : currentBranchFiles) {
@@ -452,6 +452,15 @@ public class Repository {
 
         File branchToRemove = join(BRANCHES_DIR, branchName);
         branchToRemove.delete();
+    }
+
+    public static void reset(String commitHash) {
+        Commit commit = getCommitFromHash(commitHash);
+
+        if (commit == null) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
     }
 
     private static Commit getCommitFromHash(String hash) {
