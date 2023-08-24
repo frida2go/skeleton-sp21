@@ -476,8 +476,8 @@ public class Repository {
         Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
         Set<String> currentAndStagedFiles = getCurrentAndStagedFiles(stage);
 
-        for (String filename : cwdFiles) {
-            if (!currentAndStagedFiles.contains(filename) && commitsFiles.containsKey(filename)) {
+        for (String filename : commitsFiles.keySet()) {
+            if (!currentAndStagedFiles.contains(filename) && cwdFiles.contains(filename)) {
                 System.out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
                 return;
