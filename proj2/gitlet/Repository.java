@@ -467,16 +467,16 @@ public class Repository {
         }
 
         HashMap<String, String> commitsFiles = commit.getFile();
-        for (String filename : commitsFiles.keySet()) {
-            checkoutFile(filename, commitHash);
-        }
-
         Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
         for (String filename : cwdFiles) {
             if (!isStaged(stage, filename) && !commitsFiles.containsKey(filename)) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 return;
             }
+        }
+
+        for (String filename : commitsFiles.keySet()) {
+            checkoutFile(filename, commitHash);
         }
 
         for (String filename : cwdFiles) {

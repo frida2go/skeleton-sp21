@@ -81,6 +81,10 @@ public class Main {
                 isValidArgument(args,2);
                 rmBranch(args[1]);
                 break;
+            case "reset":
+                isValidArgument(args,2);
+                reset(args[1]);
+                break;
 
         }
 
