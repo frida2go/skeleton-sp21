@@ -256,25 +256,21 @@ public class Repository {
     }
 
     public static void status() {
-        List<String> branches = getBranches();
-        String currentBranches = getCurrentBranch();
-        branches.remove(currentBranches);
 
-        StagingArea stage = getStage();
-        ArrayList<String> addedFiles = stage.getStagedFiles();
-        Collections.sort(addedFiles);
-
-        ArrayList<String> removedFiles = stage.getRemovedFiles();
-        Collections.sort(removedFiles);
+        branchStatus();
+        stageStatus();
 
         Commit currentCommit = getCurrentCommit();
+        StagingArea stage = getStage();
+
         HashMap<String, String> currentCommitFiles = currentCommit.getFile();
+
 
         List<String> modifiedNotStaged = new ArrayList<>();
         List<String> untrackedFiles = new ArrayList<>();
         List<String> cwdFiles = plainFilenamesIn(CWD);
 
-        for (String file: cwdFiles) {
+        for (String file : cwdFiles) {
 
             // 是否在缓存区？ 是否被commit追踪？ 是否修改过？
             boolean staged = isStaged(stage, file);
@@ -283,41 +279,24 @@ public class Repository {
 
             //如果在缓存区，但是文件已经不存在了（删除）
             if (tracked && isModified && !staged) {
-                modifiedNotStaged.add(file);
-            }
-            if (staged && isModified) {
-                modifiedNotStaged.add(file);
+                modifiedNotStaged.add(file + " (modified)");
             }
             if (!staged && !tracked) {
-               untrackedFiles.add(file);
+                untrackedFiles.add(file);
             }
         }
 
-        for (String file: stage.getStagedFiles()){
-            if (!join(CWD,file).exists()){
-                modifiedNotStaged.add(file);
+        for (String file : stage.getStagedFiles()) {
+            if (!join(CWD, file).exists()) {
+                modifiedNotStaged.add(file + " (deleted)");
             }
         }
 
-        for (String file: currentCommitFiles.keySet()){
-            if (!stage.getRemovedFiles().contains(file) && !join(CWD,file).exists()){
-                modifiedNotStaged.add(file);
+        for (String file : currentCommitFiles.keySet()) {
+            if (!stage.getRemovedFiles().contains(file) && !join(CWD, file).exists()) {
+                modifiedNotStaged.add(file + " (deleted)");
             }
         }
-
-
-        out.println("=== Branches ===");
-        out.println("*" + currentBranches);
-        branches.forEach(out::println);
-        out.println();
-
-        out.println("=== Staged Files ===");
-        for (String filename : addedFiles) out.println(filename);
-        out.println();
-
-        out.println("=== Removed Files ===");
-        removedFiles.forEach(out::println);
-        out.println();
 
         out.println("=== Modifications Not Staged For Commit ===");
         modifiedNotStaged.forEach(out::println);
@@ -327,7 +306,33 @@ public class Repository {
         untrackedFiles.forEach(out::println);
         out.println();
 
+    }
 
+    private static void branchStatus() {
+        List<String> branches = getBranches();
+        String currentBranches = getCurrentBranch();
+        branches.remove(currentBranches);
+        out.println("=== Branches ===");
+        out.println("*" + currentBranches);
+        branches.forEach(out::println);
+        out.println();
+    }
+
+    private static void stageStatus() {
+        StagingArea stage = getStage();
+        ArrayList<String> addedFiles = stage.getStagedFiles();
+        Collections.sort(addedFiles);
+
+        ArrayList<String> removedFiles = stage.getRemovedFiles();
+        Collections.sort(removedFiles);
+
+        out.println("=== Staged Files ===");
+        for (String filename : addedFiles) out.println(filename);
+        out.println();
+
+        out.println("=== Removed Files ===");
+        removedFiles.forEach(out::println);
+        out.println();
     }
 
     private static boolean isStaged(StagingArea stage, String file) {
@@ -506,11 +511,11 @@ public class Repository {
             return;
         }
 
-        if (!getBranches().contains(branch)){
+        if (!getBranches().contains(branch)) {
             out.println("A branch with that name does not exist.");
             return;
         }
-        
+
         String currentBranch = getCurrentBranch();
         if (currentBranch.equals(branch)) {
             out.println("Cannot merge a branch with itself.");
@@ -521,14 +526,14 @@ public class Repository {
         Commit givenBranchHead = getBranchHead(branch);
 
         Commit splitPoint = findLatestCommonAncestor
-                (currentBranchHead,givenBranchHead);
+                (currentBranchHead, givenBranchHead);
 
-        if (splitPoint.equals(givenBranchHead)){
+        if (splitPoint.equals(givenBranchHead)) {
             out.println("Given branch is an ancestor of the current branch.");
             return;
         }
 
-        if (splitPoint.equals(currentBranchHead)){
+        if (splitPoint.equals(currentBranchHead)) {
             out.println("Current branch fast-forwarded.");
             checkoutBranch(branch);
             return;
@@ -619,9 +624,9 @@ public class Repository {
     }
 
     private static boolean isFileModified(String filename, String fileHash) {
-        File file = new File(CWD, filename);
+        File file = join(CWD, filename);
         if (file.exists()) {
-            String currentHash = Utils.sha1(Utils.readContents(file));
+            String currentHash = sha1(readContents(file));
             return !currentHash.equals(fileHash);
         }
         return false;
@@ -641,7 +646,7 @@ public class Repository {
         Stack<Commit> toVisit = new Stack<>();
         toVisit.push(commit);
 
-        while(!toVisit.empty()) {
+        while (!toVisit.empty()) {
             Commit current = toVisit.pop();
             if (!ancestors.contains(current)) {
                 ancestors.add(current);
@@ -658,14 +663,13 @@ public class Repository {
         LinkedHashSet<Commit> ancestorsCommit1 = getAllAncestors(commit1);
         LinkedHashSet<Commit> ancestorsCommit2 = getAllAncestors(commit1);
 
-        for (Commit commit: ancestorsCommit1) {
-            if (ancestorsCommit2.contains(commit)){
+        for (Commit commit : ancestorsCommit1) {
+            if (ancestorsCommit2.contains(commit)) {
                 return commit;
             }
         }
         return null;
     }
-
 
 
 }
