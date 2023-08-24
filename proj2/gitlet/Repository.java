@@ -10,7 +10,7 @@ import static gitlet.Utils.readContents;
 
 /**
  * Represents a gitlet repository.
- *  does at a high level.
+ * does at a high level.
  *
  * @author Frida
  */
@@ -31,7 +31,6 @@ public class Repository {
     public static final File STAGING_DIR = join(GITLET_DIR, "staging");
     public static final File LOG_DIR = join(GITLET_DIR, "log");
 
-    /* TODO: fill in the rest of this class. */
     public static void initCommand() {
         if (GITLET_DIR.exists()) {
             message("A Gitlet version-control system already exists in the current directory.");
@@ -162,7 +161,7 @@ public class Repository {
 
     public static void rmFile(String filename) {
         StagingArea stage = getStage();
-        boolean isStaged = stage.getAddedFiles().containsKey(filename);
+        boolean isStaged = isStaged(stage, filename);
 
         Commit current = getCurrentCommit();
         boolean isTracked = current.getFile().containsKey(filename);
@@ -301,7 +300,7 @@ public class Repository {
         for (String file : filesInCWD) {
 
             // 是否在缓存区？ 是否被commit追踪？ 是否修改过？
-            boolean isStaged = stage.getAddedFiles().containsKey(file);
+            boolean isStaged = isStaged(stage, file);
             boolean isTracked = currentFiles.containsKey(file);
             boolean isModified = isFileModified(file, currentFiles.get(file));
 
@@ -331,6 +330,10 @@ public class Repository {
         System.out.println();
 
 
+    }
+
+    private static boolean isStaged(StagingArea stage, String file) {
+        return stage.getAddedFiles().containsKey(file);
     }
 
     public static void checkout(String[] args) {
@@ -456,11 +459,42 @@ public class Repository {
 
     public static void reset(String commitHash) {
         Commit commit = getCommitFromHash(commitHash);
+        StagingArea stage = getStage();
 
         if (commit == null) {
             System.out.println("No commit with that id exists.");
             return;
         }
+
+        HashMap<String, String> commitsFiles = commit.getFile();
+        for (String filename : commitsFiles.keySet()) {
+            checkoutFile(filename, commitHash);
+        }
+
+        Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
+        for (String filename : cwdFiles) {
+            if (!isStaged(stage, filename) && !commitsFiles.containsKey(filename)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
+            }
+        }
+
+        for (String filename : cwdFiles) {
+            if (!commitsFiles.containsKey(filename)) {
+                File fileToRemove = join(CWD, filename);
+                if (fileToRemove.exists()) {
+                    fileToRemove.delete();
+                }
+            }
+        }
+
+
+        String currentBranch = getCurrentBranches();
+        File fileToWrite = join(BRANCHES_DIR, currentBranch);
+        writeObject(fileToWrite, commit.getSelfHash());
+
+        stage = new StagingArea();
+        writeStage(stage);
     }
 
     private static Commit getCommitFromHash(String hash) {
