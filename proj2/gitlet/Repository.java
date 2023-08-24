@@ -458,7 +458,7 @@ public class Repository {
     }
 
     public static void reset(String commitID) {
-        
+
         Commit targetCommit = getCommitFromHash(commitID);
 
         if (targetCommit == null) {
@@ -495,6 +495,9 @@ public class Repository {
         String currentBranch = getCurrentBranches();
         File branchPointer = join(BRANCHES_DIR, currentBranch);
         writeContents(branchPointer, commitID);
+
+        StagingArea stage = new StagingArea();
+        writeStage(stage);
     }
 
 
@@ -597,19 +600,7 @@ public class Repository {
         File gitletDir = join(CWD, ".gitlet");
         return gitletDir.exists() && gitletDir.isDirectory();
     }
-
-    private static Set<String> getCurrentAndStagedFiles(StagingArea stage) {
-        Set<String> trackedFiles = new HashSet<>();
-
-        // 1. Get files from the current commit.
-        Map<String, String> currentCommitFiles = getCurrentCommit().getFile();
-        trackedFiles.addAll(currentCommitFiles.keySet());
-
-        // 2. Get files from the staging area.
-        trackedFiles.addAll(stage.getStagedFiles());
-
-        return trackedFiles;
-    }
+    
 
 
 }
