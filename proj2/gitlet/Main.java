@@ -91,6 +91,10 @@ public class Main {
                 isValidArgument(args, 2);
                 reset(args[1]);
             }
+            case "merge" -> {
+                isValidArgument(args, 2);
+                merge(args[1]);
+            }
             default -> {
                 Utils.message("No command with that name exists.");
             }

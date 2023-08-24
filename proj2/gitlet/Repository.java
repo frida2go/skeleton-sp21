@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.net.CookieHandler;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -256,7 +257,7 @@ public class Repository {
     public static void status() {
         List<String> branches = getBranches();
         List<String> filesInCWD = plainFilenamesIn(CWD);
-        String currentBranches = getCurrentBranches();
+        String currentBranches = getCurrentBranch();
         StagingArea stage = getStage();
 
         Commit currentCommit = getCurrentCommit();
@@ -305,15 +306,12 @@ public class Repository {
             boolean isModified = isFileModified(file, currentFiles.get(file));
 
             //如果在缓存区，但是文件已经不存在了（删除）
-            if  (!join(CWD, file).exists()
-                    && !isStaged(stage, file)
+            if  (!isStaged(stage, file)
                     && !removedFiles.contains(file)) {
                 modifiedNotStaged.add(file + " (deleted)");
-
             } else if (isTracked && isModified && !isStaged) {
                 // 如果在现在commit，修改过了，但不在缓存区
                 modifiedNotStaged.add(file + " (modified)");
-                
             } else if (!isStaged && !isTracked) {
                 //既不在缓存区又没有被现在commit tracked
                 untrackedFiles.add(file);
@@ -382,7 +380,7 @@ public class Repository {
     }
 
     private static void checkoutBranch(String branchName) {
-        String currentBranch = getCurrentBranches();
+        String currentBranch = getCurrentBranch();
         List<String> allBranches = getBranches();
 
         if (branchName.equals(currentBranch)) {
@@ -431,7 +429,7 @@ public class Repository {
     }
 
     public static void createBranch(String branchName) {
-        String currentBranchCommitHash = getBranchHead(getCurrentBranches()).getSelfHash();
+        String currentBranchCommitHash = getBranchHead(getCurrentBranch()).getSelfHash();
         List<String> branchList = getBranches();
 
         if (branchList.contains(branchName)) {
@@ -444,7 +442,7 @@ public class Repository {
     }
 
     public static void rmBranch(String branchName) {
-        String currentBranch = getCurrentBranches();
+        String currentBranch = getCurrentBranch();
         List<String> branchList = getBranches();
 
         if (branchName.equals(currentBranch)) {
@@ -496,12 +494,49 @@ public class Repository {
         }
 
         // Set the current branch's pointer to the target commit
-        String currentBranch = getCurrentBranches();
+        String currentBranch = getCurrentBranch();
         File branchPointer = join(BRANCHES_DIR, currentBranch);
         writeContents(branchPointer, commitID);
 
         StagingArea stage = new StagingArea();
         writeStage(stage);
+    }
+
+    public static void merge(String branch) {
+        StagingArea stage = getStage();
+        if (!stage.getAddedFiles().isEmpty()
+                || !stage.getRemovedFiles().isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+
+        if (!getBranches().contains(branch)){
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        
+        String currentBranch = getCurrentBranch();
+        if (currentBranch.equals(branch)) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+
+        Commit currentBranchHead = getBranchHead(currentBranch);
+        Commit givenBranchHead = getBranchHead(branch);
+
+        Commit splitPoint = findLatestCommonAncestor
+                (currentBranchHead,givenBranchHead);
+
+        if (splitPoint.equals(givenBranchHead)){
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+
+        if (splitPoint.equals(currentBranchHead)){
+            System.out.println("Current branch fast-forwarded.");
+            checkoutBranch(branch);
+            return;
+        }
     }
 
 
@@ -536,13 +571,9 @@ public class Repository {
         return readObject(commitFile, Commit.class);
     }
 
-    private static String getCurrentBranches() {
+    private static String getCurrentBranch() {
         File headFile = join(BRANCHES_DIR, "head");
-        if (headFile.exists()) {
-            return Utils.readContentsAsString(headFile);
-        }
-
-        return null;
+        return Utils.readContentsAsString(headFile);
     }
 
     private static List<String> getBranches() {
@@ -603,6 +634,40 @@ public class Repository {
     public static boolean isInitialized() {
         File gitletDir = join(CWD, ".gitlet");
         return gitletDir.exists() && gitletDir.isDirectory();
+    }
+
+    private static LinkedHashSet<Commit> getAllAncestors(Commit commit) {
+        LinkedHashSet<Commit> ancestors = new LinkedHashSet<>();
+        if (commit == null) {
+            return ancestors;
+        }
+
+        Stack<Commit> toVisit = new Stack<>();
+        toVisit.push(commit);
+
+        while(!toVisit.empty()) {
+            Commit current = toVisit.pop();
+            if (!ancestors.contains(current)) {
+                ancestors.add(current);
+                for (String parentID : current.getParentList()) {
+                    Commit parent = getCommitFromHash(parentID);
+                    toVisit.push(parent);
+                }
+            }
+        }
+        return ancestors;
+    }
+
+    private static Commit findLatestCommonAncestor(Commit commit1, Commit commit2) {
+        LinkedHashSet<Commit> ancestorsCommit1 = getAllAncestors(commit1);
+        LinkedHashSet<Commit> ancestorsCommit2 = getAllAncestors(commit1);
+
+        for (Commit commit: ancestorsCommit1) {
+            if (ancestorsCommit2.contains(commit)){
+                return commit;
+            }
+        }
+        return null;
     }
 
 
