@@ -470,7 +470,8 @@ public class Repository {
         Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
         for (String filename : cwdFiles) {
             if (!isStaged(stage, filename) && !commitsFiles.containsKey(filename)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 return;
             }
         }
