@@ -36,57 +36,68 @@ public class Main {
         }
 
         String firstArg = args[0];
+
+        if (!firstArg.equals("init") && !isInitialized()) {
+            Utils.message("Not in an initialized Gitlet directory.");
+            System.exit(1);
+        }
+
         switch (firstArg) {
-            case "init":
+            case "init" -> {
                 isValidArgument(args, 1);
                 initCommand();
-                break;
-            case "add":
+            }
+            case "add" -> {
                 isValidArgument(args, 2);
                 addFiles(args[1]);
-                break;
-            case "commit":
+            }
+            case "commit" -> {
                 isValidArgument(args, 2);
                 createCommit(args[1]);
-                break;
-            case "rm":
+            }
+            case "rm" -> {
                 isValidArgument(args, 2);
                 rmFile(args[1]);
-                break;
-            case "log":
+            }
+            case "log" -> {
                 isValidArgument(args, 1);
                 log();
-                break;
-            case "global-log":
+            }
+            case "global-log" -> {
                 isValidArgument(args, 1);
                 globLog();
-                break;
-            case "find":
+            }
+            case "find" -> {
                 isValidArgument(args, 2);
                 find(args[1]);
-                break;
-            case "status":
+            }
+            case "status" -> {
                 isValidArgument(args, 1);
                 status();
-                break;
-            case "checkout":
+            }
+            case "checkout" -> {
                 String[] checkoutArgs = Arrays.copyOfRange(args, 1, args.length);
                 checkout(checkoutArgs);
-                break;
-            case "branch":
+            }
+            case "branch" -> {
                 isValidArgument(args, 2);
                 createBranch(args[1]);
-                break;
-            case "rm-branch":
-                isValidArgument(args,2);
+            }
+            case "rm-branch" -> {
+                isValidArgument(args, 2);
                 rmBranch(args[1]);
-                break;
-            case "reset":
-                isValidArgument(args,2);
+            }
+            case "reset" -> {
+                isValidArgument(args, 2);
                 reset(args[1]);
-                break;
-
+            }
+            default -> {
+                Utils.message("No command with that name exists.");
+                System.exit(1);
+            }
         }
+
+
 
 
     }

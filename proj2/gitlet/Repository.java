@@ -467,24 +467,27 @@ public class Repository {
         }
 
         HashMap<String, String> commitsFiles = commit.getFile();
+        // 先检出所有需要的文件。
+        for (String filename : commitsFiles.keySet()) {
+            checkoutFile(filename, commitHash);
+        }
+
+
         Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
         for (String filename : cwdFiles) {
-            if (!isStaged(stage, filename) && !commitsFiles.containsKey(filename)) {
+            if (!isStaged(stage, filename)
+                    && !commitsFiles.containsKey(filename)) {
                 System.out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
                 return;
             }
         }
 
-        for (String filename : commitsFiles.keySet()) {
-            checkoutFile(filename, commitHash);
-        }
-
         for (String filename : cwdFiles) {
             if (!commitsFiles.containsKey(filename)) {
                 File fileToRemove = join(CWD, filename);
                 if (fileToRemove.exists()) {
-                    fileToRemove.delete();
+                    restrictedDelete(fileToRemove);
                 }
             }
         }
@@ -499,31 +502,21 @@ public class Repository {
     }
 
     private static Commit getCommitFromHash(String hash) {
-        String commitHash = hash;
+        List<String> allCommits = plainFilenamesIn(COMMITS_DIR);
 
-        if (hash.length() == 6) {
-            List<String> allCommits = plainFilenamesIn(COMMITS_DIR);
-            List<String> matchCommits;
+        if (allCommits != null) {
+            return null;}
 
-            if (allCommits != null) {
-                matchCommits = allCommits.stream()
-                        .filter(name -> name.startsWith(hash))
-                        .collect(Collectors.toList());
-            } else {
-                matchCommits = new ArrayList<>();
+        List<String> matchCommits = allCommits.stream()
+                .filter(name -> name.startsWith(hash))
+                .collect(Collectors.toList());
+
+        if (matchCommits.size() == 1) {
+            File commitFile = join(COMMITS_DIR, matchCommits.get(0));
+            if (commitFile.exists()) {
+                return readObject(commitFile, Commit.class);
             }
-
-            if (matchCommits.size() == 1) {
-                commitHash = matchCommits.get(0);
-            }
-
         }
-
-        File commitFile = join(COMMITS_DIR, commitHash);
-        if (commitFile.exists()) {
-            return readObject(commitFile, Commit.class);
-        }
-
         return null;
     }
 
@@ -600,6 +593,11 @@ public class Repository {
             return !currentHash.equals(fileHash);
         }
         return false;
+    }
+
+    public static boolean isInitialized() {
+        File gitletDir = join(CWD,".gitlet");
+        return gitletDir.exists() && gitletDir.isDirectory();
     }
 
 
