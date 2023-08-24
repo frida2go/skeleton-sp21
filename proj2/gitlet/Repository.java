@@ -10,10 +10,9 @@ import static gitlet.Utils.readContents;
 
 /**
  * Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- * @author TODO
+ * @author Frida
  */
 public class Repository {
     private String HEAD = "master";
@@ -309,13 +308,11 @@ public class Repository {
             //如果在缓存区，但是文件已经不存在了（删除）
             if (isStaged && !join(CWD, file).exists()) {
                 modifiedNotStaged.add(file + " (deleted)");
-            } // 如果在现在commit，修改过了，但不在缓存区
-
-            else if (isTracked && isModified && !isStaged) {
+            } else if (isTracked && isModified && !isStaged) {
+                // 如果在现在commit，修改过了，但不在缓存区
                 modifiedNotStaged.add(file + " (modified)");
-            }//既不在缓存区又没有被现在commit tracked
-            
-            else if (!isStaged && !isTracked) {
+            } else if (!isStaged && !isTracked) {
+                //既不在缓存区又没有被现在commit tracked
                 untrackedFiles.add(file);
             }
 
@@ -393,10 +390,10 @@ public class Repository {
 
         Set<String> currentBranchFiles = getFilesFromBranchHead(currentBranch);
         Set<String> checkBranchFiles = getFilesFromBranchHead(branchName);
-        List<String> CWDFiles = plainFilenamesIn(CWD);
+        List<String> cwdFiles = plainFilenamesIn(CWD);
 
-        if (CWDFiles != null) {
-            for (String file : CWDFiles) {
+        if (cwdFiles != null) {
+            for (String file : cwdFiles) {
                 if (!currentBranchFiles.contains(file)
                         && checkBranchFiles.contains(file)) {
                     System.out.println("There is an untracked file in the way; "
@@ -417,7 +414,7 @@ public class Repository {
             }
         }
 
-        File headFile = join(GITLET_DIR, "HEAD");
+        File headFile = join(BRANCHES_DIR, "head");
         writeContents(headFile, branchName);
 
         StagingArea stage = getStage();
