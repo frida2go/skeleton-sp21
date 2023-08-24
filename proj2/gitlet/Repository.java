@@ -467,16 +467,17 @@ public class Repository {
         }
 
         HashMap<String, String> commitsFiles = commit.getFile();
-        // 先检出所有需要的文件。
+
+        // Checkout all required files from the commit.
         for (String filename : commitsFiles.keySet()) {
             checkoutFile(filename, commitHash);
         }
 
-
         Set<String> cwdFiles = new HashSet<>(plainFilenamesIn(CWD));
+        Set<String> currentAndStagedFiles = getCurrentAndStagedFiles(stage);
+
         for (String filename : cwdFiles) {
-            if (!isStaged(stage, filename)
-                    && !commitsFiles.containsKey(filename)) {
+            if (!currentAndStagedFiles.contains(filename) && commitsFiles.containsKey(filename)) {
                 System.out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
                 return;
@@ -491,14 +492,6 @@ public class Repository {
                 }
             }
         }
-
-
-        String currentBranch = getCurrentBranches();
-        File fileToWrite = join(BRANCHES_DIR, currentBranch);
-        writeObject(fileToWrite, commit.getSelfHash());
-
-        stage = new StagingArea();
-        writeStage(stage);
     }
 
     private static Commit getCommitFromHash(String hash) {
@@ -597,8 +590,21 @@ public class Repository {
     }
 
     public static boolean isInitialized() {
-        File gitletDir = join(CWD,".gitlet");
+        File gitletDir = join(CWD, ".gitlet");
         return gitletDir.exists() && gitletDir.isDirectory();
+    }
+
+    private static Set<String> getCurrentAndStagedFiles(StagingArea stage) {
+        Set<String> trackedFiles = new HashSet<>();
+
+        // 1. Get files from the current commit.
+        Map<String, String> currentCommitFiles = getCurrentCommit().getFile();
+        trackedFiles.addAll(currentCommitFiles.keySet());
+
+        // 2. Get files from the staging area.
+        trackedFiles.addAll(stage.getStagedFiles());
+
+        return trackedFiles;
     }
 
 
