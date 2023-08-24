@@ -84,20 +84,17 @@ public class Repository {
         StagingArea stage = getStage();
         Commit currentCommit = getCurrentCommit();
 
-        //如果现在的Commit的文件列表已经有了要添加的文件（名字），并且内容也完全相同，则将
-        //文件从Stage 删除。
+        
         if (currentCommit.getFile().containsKey(fileName) &&
                 currentCommit.getFile().get(fileName).equals(fileHash)) {
-            stage.addToRemovedFiles(fileName);
+            return;
 
         }
         if (stage.getRemovedFiles().contains(fileName)) {
             stage.removeRemovedFile(fileName);
 
         }
-        if (stage.getAddedFiles().containsKey(fileName)) {
-            return;
-        } else {
+        if (!stage.getAddedFiles().containsKey(fileName)) {
             stage.add(fileName, fileHash);
         }
 
