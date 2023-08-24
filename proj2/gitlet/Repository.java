@@ -260,29 +260,12 @@ public class Repository {
         String currentBranches = getCurrentBranch();
         branches.remove(currentBranches);
 
-        //print branches
-        out.println("=== Branches ===");
-        out.println("*" + currentBranches);
-        branches.forEach(out::println);
-        out.println();
-
         StagingArea stage = getStage();
         ArrayList<String> addedFiles = stage.getStagedFiles();
         Collections.sort(addedFiles);
 
-        //print staged Files
-        out.println("=== Staged Files ===");
-        for (String filename : addedFiles) out.println(filename);
-        out.println();
-
-        // Display Removed Files
         ArrayList<String> removedFiles = stage.getRemovedFiles();
         Collections.sort(removedFiles);
-
-        out.println("=== Removed Files ===");
-        removedFiles.forEach(out::println);
-
-        out.println();
 
         Commit currentCommit = getCurrentCommit();
         HashMap<String, String> currentFiles = currentCommit.getFile();
@@ -293,34 +276,42 @@ public class Repository {
         for (String file : currentFiles.keySet()) {
 
             // 是否在缓存区？ 是否被commit追踪？ 是否修改过？
-            boolean isStaged = isStaged(stage, file);
-            boolean isTracked = currentFiles.containsKey(file);
+            boolean staged = isStaged(stage, file);
+            boolean tracked = currentFiles.containsKey(file);
             boolean isModified = isFileModified(file, currentFiles.get(file));
 
             //如果在缓存区，但是文件已经不存在了（删除）
-            if  (!isStaged && isTracked && !join(CWD, file).exists()) {
+            if  (tracked && !join(CWD, file).exists()) {
                 modifiedNotStaged.add(file + " (deleted)");
-            } else if (isTracked && isModified && !isStaged) {
+            } else if (tracked && isModified && !staged) {
                 // 如果在现在commit，修改过了，但不在缓存区
                 modifiedNotStaged.add(file + " (modified)");
-            } else if (!isStaged && !isTracked) {
+            } else if (!staged && !tracked) {
                 //既不在缓存区又没有被现在commit tracked
                 untrackedFiles.add(file);
             }
 
         }
 
+        out.println("=== Branches ===");
+        out.println("*" + currentBranches);
+        branches.forEach(out::println);
+        out.println();
+
+        out.println("=== Staged Files ===");
+        for (String filename : addedFiles) out.println(filename);
+        out.println();
+
+        out.println("=== Removed Files ===");
+        removedFiles.forEach(out::println);
+        out.println();
+
         out.println("=== Modifications Not Staged For Commit ===");
-        for (String file : modifiedNotStaged) {
-            out.println(file);
-        }
+        modifiedNotStaged.forEach(out::println);
         out.println();
 
         out.println("=== Untracked Files ===");
-
-        for (String file : untrackedFiles) {
-            out.println(file);
-        }
+        untrackedFiles.forEach(out::println);
         out.println();
 
 
