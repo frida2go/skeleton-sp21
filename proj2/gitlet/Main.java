@@ -39,7 +39,7 @@ public class Main {
 
         if (!firstArg.equals("init") && !isInitialized()) {
             Utils.message("Not in an initialized Gitlet directory.");
-            System.exit(1);
+            System.exit(0);
         }
 
         switch (firstArg) {
@@ -93,7 +93,6 @@ public class Main {
             }
             default -> {
                 Utils.message("No command with that name exists.");
-                System.exit(1);
             }
         }
 

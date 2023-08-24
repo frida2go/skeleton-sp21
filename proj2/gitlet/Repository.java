@@ -305,11 +305,15 @@ public class Repository {
             boolean isModified = isFileModified(file, currentFiles.get(file));
 
             //如果在缓存区，但是文件已经不存在了（删除）
-            if (isStaged && !join(CWD, file).exists()) {
+            if  (!join(CWD, file).exists()
+                    && !isStaged(stage, file)
+                    && !removedFiles.contains(file)) {
                 modifiedNotStaged.add(file + " (deleted)");
+
             } else if (isTracked && isModified && !isStaged) {
                 // 如果在现在commit，修改过了，但不在缓存区
                 modifiedNotStaged.add(file + " (modified)");
+                
             } else if (!isStaged && !isTracked) {
                 //既不在缓存区又没有被现在commit tracked
                 untrackedFiles.add(file);
@@ -600,7 +604,7 @@ public class Repository {
         File gitletDir = join(CWD, ".gitlet");
         return gitletDir.exists() && gitletDir.isDirectory();
     }
-    
+
 
 
 }
