@@ -504,8 +504,9 @@ public class Repository {
     private static Commit getCommitFromHash(String hash) {
         List<String> allCommits = plainFilenamesIn(COMMITS_DIR);
 
-        if (allCommits != null) {
-            return null;}
+        if (allCommits == null) {
+            return null;
+        }
 
         List<String> matchCommits = allCommits.stream()
                 .filter(name -> name.startsWith(hash))
