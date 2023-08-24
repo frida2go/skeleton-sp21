@@ -268,30 +268,43 @@ public class Repository {
         Collections.sort(removedFiles);
 
         Commit currentCommit = getCurrentCommit();
-        HashMap<String, String> currentFiles = currentCommit.getFile();
+        HashMap<String, String> currentCommitFiles = currentCommit.getFile();
 
         List<String> modifiedNotStaged = new ArrayList<>();
         List<String> untrackedFiles = new ArrayList<>();
+        List<String> cwdFiles = plainFilenamesIn(CWD);
 
-        for (String file : currentFiles.keySet()) {
+        for (String file: cwdFiles) {
 
             // 是否在缓存区？ 是否被commit追踪？ 是否修改过？
             boolean staged = isStaged(stage, file);
-            boolean tracked = currentFiles.containsKey(file);
-            boolean isModified = isFileModified(file, currentFiles.get(file));
+            boolean tracked = currentCommitFiles.containsKey(file);
+            boolean isModified = isFileModified(file, currentCommitFiles.get(file));
 
             //如果在缓存区，但是文件已经不存在了（删除）
-            if  (tracked && !join(CWD, file).exists()) {
-                modifiedNotStaged.add(file + " (deleted)");
-            } else if (tracked && isModified && !staged) {
-                // 如果在现在commit，修改过了，但不在缓存区
-                modifiedNotStaged.add(file + " (modified)");
-            } else if (!staged && !tracked) {
-                //既不在缓存区又没有被现在commit tracked
-                untrackedFiles.add(file);
+            if (tracked && isModified && !staged) {
+                modifiedNotStaged.add(file);
             }
-
+            if (staged && isModified) {
+                modifiedNotStaged.add(file);
+            }
+            if (!staged && !tracked) {
+               untrackedFiles.add(file);
+            }
         }
+
+        for (String file: stage.getStagedFiles()){
+            if (!join(CWD,file).exists()){
+                modifiedNotStaged.add(file);
+            }
+        }
+
+        for (String file: currentCommitFiles.keySet()){
+            if (!stage.getRemovedFiles().contains(file) && !join(CWD,file).exists()){
+                modifiedNotStaged.add(file);
+            }
+        }
+
 
         out.println("=== Branches ===");
         out.println("*" + currentBranches);
