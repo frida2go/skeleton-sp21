@@ -2,8 +2,10 @@ package gitlet;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static gitlet.Utils.*;
+import static gitlet.Utils.readContents;
 
 // TODO: any imports you need here
 
@@ -299,20 +301,16 @@ public class Repository {
             boolean isTracked = currentFiles.containsKey(file);
             boolean isModified = isFileModified(file, currentFiles.get(file));
 
-            //如果在缓存区，且修改过
-            if (isStaged && isModified) {
-                modifiedNotStaged.add(file + " (modified)");
-
-                //如果在缓存区，但是文件已经不存在了（删除）
-            } else if (isStaged && !join(CWD, file).exists()) {
+            //如果在缓存区，但是文件已经不存在了（删除）
+            if (isStaged && !join(CWD, file).exists()) {
                 modifiedNotStaged.add(file + " (deleted)");
-
-                // 如果在现在commit，修改过了，但不在缓存区
-            } else if (isTracked && isModified && !isStaged) {
+            }
+            // 如果在现在commit，修改过了，但不在缓存区
+            else if (isTracked && isModified && !isStaged) {
                 modifiedNotStaged.add(file + " (modified)");
-
-                //既不在缓存区又没有被现在commit tracked
-            } else if (!isStaged && !isTracked) {
+            }
+            //既不在缓存区又没有被现在commit tracked
+            else if (!isStaged && !isTracked) {
                 untrackedFiles.add(file);
             }
 
@@ -333,11 +331,108 @@ public class Repository {
 
     }
 
-    private static Commit getCommitFromHash(String hash) {
-        File CommitFile = join(COMMITS_DIR, hash);
 
-        if (CommitFile.exists()) {
-            return readObject(CommitFile, Commit.class);
+    private static void checkoutFile(String filename, String commitID) {
+        Commit commitToFind;
+
+        if (commitID == null) {
+            commitToFind = getCurrentCommit();
+        } else {
+            commitToFind = getCommitFromHash(commitID);
+
+            if (commitToFind == null) {
+                System.out.println("No commit with that id exists.");
+                return;
+            }
+        }
+
+        String fileHash = commitToFind.getFile().get(filename);
+
+        if (fileHash == null) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+
+        File blobFile = join(BLOBS_DIR,fileHash);
+        byte[] fileContent = readContents(blobFile);
+        File fileTo = join(CWD,filename);
+        writeContents(fileTo,fileContent);
+
+    }
+
+    private static void checkoutBranch(String branchName) {
+        String currentBranch = getCurrentBranches();
+        List<String> allBranches = getBranches();
+
+        if (branchName.equals(currentBranch)) {
+            System.out.println("No need to checkout the current branch.");
+            return;
+        }
+
+        if (!allBranches.contains(branchName)) {
+            System.out.println("No such branch exists");
+            return;
+        }
+
+        Set<String> currentBranchFiles = getFilesFromBranchHead(currentBranch);
+        Set<String> checkBranchFiles = getFilesFromBranchHead(branchName);
+        List<String> CWDFiles = plainFilenamesIn(CWD);
+
+        if (CWDFiles != null) {
+            for (String file: CWDFiles) {
+                if (!currentBranchFiles.contains(file)
+                        && checkBranchFiles.contains(file)) {
+                    System.out.println("There is an untracked file in the way; " +
+                            "delete it, or add and commit it first.");
+                    return;
+                }
+            }
+        }
+
+        for (String file: checkBranchFiles) {
+            checkoutFile(file,null);
+        }
+
+        for (String file: currentBranchFiles) {
+            if (!checkBranchFiles.contains(file)) {
+                File fileToDelete = join(CWD,file);
+                fileToDelete.delete();
+            }
+        }
+
+        File headFile = join(GITLET_DIR, "HEAD");
+        writeContents(headFile,branchName);
+
+        StagingArea stage = getStage();
+        stage.clear();
+        writeStage(stage);
+
+    }
+
+    private static Commit getCommitFromHash(String hash) {
+        String commitHash = hash;
+
+        if (hash.length() == 6) {
+            List<String> allCommits = plainFilenamesIn(COMMITS_DIR);
+            List<String> matchCommits;
+
+            if (allCommits != null) {
+                matchCommits = allCommits.stream()
+                        .filter(name -> name.startsWith(hash))
+                        .collect(Collectors.toList());
+            } else {
+                matchCommits = new ArrayList<>();
+            }
+
+            if (matchCommits.size() == 1) {
+                commitHash = matchCommits.get(0);
+            }
+
+        }
+
+        File commitFile = join(COMMITS_DIR, commitHash);
+        if (commitFile.exists()) {
+            return readObject(commitFile, Commit.class);
         }
 
         return null;
@@ -372,6 +467,27 @@ public class Repository {
         List<String> mutableBranches = new ArrayList<>(branches);
         mutableBranches.remove("head");
         return mutableBranches;
+    }
+
+    private static Commit getBranchHead(String branchName) {
+        File brancheFile = join(BRANCHES_DIR,branchName);
+
+        if (brancheFile.exists()) {
+            String commitHash = readContentsAsString(brancheFile);
+            return getCommitFromHash(commitHash);
+        }
+
+        return null;
+    }
+
+    private static Set<String> getFilesFromBranchHead(String branchName) {
+        Commit commit = getBranchHead(branchName);
+
+        if (commit == null) {
+            return new HashSet<>();
+        }
+
+        return commit.getFile().keySet();
     }
 
     private static StagingArea getStage() {

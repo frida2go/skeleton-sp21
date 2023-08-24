@@ -77,10 +77,7 @@ public class Commit implements Serializable {
     }
 
     public HashMap<String, String> getFile() {
-        if (fileToBlobMap != null) {
-            return new HashMap<>(fileToBlobMap);
-        }
-        return null;
+        return new HashMap<>(fileToBlobMap);
     }
 }
 
