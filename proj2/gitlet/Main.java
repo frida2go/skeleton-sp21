@@ -1,5 +1,6 @@
 package gitlet;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import static gitlet.Repository.*;
@@ -68,6 +69,10 @@ public class Main {
             case "status":
                 isValidArgument(args, 1);
                 status();
+                break;
+            case "checkout":
+                String[] checkoutArgs = Arrays.copyOfRange(args, 1, args.length);
+                checkout(checkoutArgs);
                 break;
 
         }

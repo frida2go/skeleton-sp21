@@ -62,8 +62,8 @@ public class Repository {
 
     }
 
-    public static void addFiles(String filename) {
-        File filePath = join(CWD, filename);
+    public static void addFiles(String fileName) {
+        File filePath = join(CWD, fileName);
         //检查想add的文件是否存在
         if (!filePath.exists()) {
             System.out.println("File not exist.");
@@ -86,11 +86,18 @@ public class Repository {
 
         //如果现在的Commit的文件列表已经有了要添加的文件（名字），并且内容也完全相同，则将
         //文件从Stage 删除。
-        if (currentCommit.getFile().containsKey(filename) &&
-                currentCommit.getFile().get(filename).equals(fileHash)) {
-            stage.addToRemovedFiles(filename);
-        } else {
-            stage.add(filename, fileHash);
+        if (currentCommit.getFile().containsKey(fileName) &&
+                currentCommit.getFile().get(fileName).equals(fileHash)) {
+            stage.addToRemovedFiles(fileName);
+
+        } if (stage.getRemovedFiles().contains(fileName)) {
+            stage.removeRemovedFile(fileName);
+
+        } if (stage.getAddedFiles().containsKey(fileName)) {
+            return;
+        }
+        else {
+            stage.add(fileName, fileHash);
         }
 
         writeStage(stage);
@@ -105,7 +112,7 @@ public class Repository {
             return;
         }
 
-        if (message.isEmpty()) {
+        if (message.equals("")) {
             System.out.println("Please enter a commit message.");
         }
 
@@ -329,6 +336,18 @@ public class Repository {
         System.out.println();
 
 
+    }
+
+    public static void checkout(String[] args) {
+        if (args.length == 2 && args[0].equals("--")) {
+            checkoutFile(args[1],null);
+        } else if (args.length == 3 && args[1].equals("--")) {
+            checkoutFile(args[2],args[0]);
+        } else if (args.length == 1) {
+            checkoutBranch(args[0]);
+        } else {
+            System.out.println("Incorrect Operands");
+        }
     }
 
 
