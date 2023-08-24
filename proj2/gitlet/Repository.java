@@ -90,13 +90,14 @@ public class Repository {
                 currentCommit.getFile().get(fileName).equals(fileHash)) {
             stage.addToRemovedFiles(fileName);
 
-        } if (stage.getRemovedFiles().contains(fileName)) {
+        }
+        if (stage.getRemovedFiles().contains(fileName)) {
             stage.removeRemovedFile(fileName);
 
-        } if (stage.getAddedFiles().containsKey(fileName)) {
-            return;
         }
-        else {
+        if (stage.getAddedFiles().containsKey(fileName)) {
+            return;
+        } else {
             stage.add(fileName, fileHash);
         }
 
@@ -340,9 +341,9 @@ public class Repository {
 
     public static void checkout(String[] args) {
         if (args.length == 2 && args[0].equals("--")) {
-            checkoutFile(args[1],null);
+            checkoutFile(args[1], null);
         } else if (args.length == 3 && args[1].equals("--")) {
-            checkoutFile(args[2],args[0]);
+            checkoutFile(args[2], args[0]);
         } else if (args.length == 1) {
             checkoutBranch(args[0]);
         } else {
@@ -372,10 +373,10 @@ public class Repository {
             return;
         }
 
-        File blobFile = join(BLOBS_DIR,fileHash);
+        File blobFile = join(BLOBS_DIR, fileHash);
         byte[] fileContent = readContents(blobFile);
-        File fileTo = join(CWD,filename);
-        writeContents(fileTo,fileContent);
+        File fileTo = join(CWD, filename);
+        writeContents(fileTo, fileContent);
 
     }
 
@@ -398,7 +399,7 @@ public class Repository {
         List<String> CWDFiles = plainFilenamesIn(CWD);
 
         if (CWDFiles != null) {
-            for (String file: CWDFiles) {
+            for (String file : CWDFiles) {
                 if (!currentBranchFiles.contains(file)
                         && checkBranchFiles.contains(file)) {
                     System.out.println("There is an untracked file in the way; " +
@@ -408,19 +409,19 @@ public class Repository {
             }
         }
 
-        for (String file: checkBranchFiles) {
-            checkoutFile(file,null);
+        for (String file : checkBranchFiles) {
+            checkoutFile(file, null);
         }
 
-        for (String file: currentBranchFiles) {
+        for (String file : currentBranchFiles) {
             if (!checkBranchFiles.contains(file)) {
-                File fileToDelete = join(CWD,file);
+                File fileToDelete = join(CWD, file);
                 fileToDelete.delete();
             }
         }
 
         File headFile = join(GITLET_DIR, "HEAD");
-        writeContents(headFile,branchName);
+        writeContents(headFile, branchName);
 
         StagingArea stage = getStage();
         stage.clear();
@@ -489,7 +490,7 @@ public class Repository {
     }
 
     private static Commit getBranchHead(String branchName) {
-        File brancheFile = join(BRANCHES_DIR,branchName);
+        File brancheFile = join(BRANCHES_DIR, branchName);
 
         if (brancheFile.exists()) {
             String commitHash = readContentsAsString(brancheFile);

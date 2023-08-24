@@ -44,14 +44,13 @@ public class StagingArea implements Serializable {
         return new ArrayList<>(addedFiles.keySet());
     }
 
-    public void removeAddedFile(String filename){
+    public void removeAddedFile(String filename) {
         addedFiles.remove(filename);
     }
 
     public void removeRemovedFile(String filename) {
         removedFiles.remove(filename);
     }
-
 
 
 }
