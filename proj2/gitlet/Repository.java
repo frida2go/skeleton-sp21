@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import static gitlet.Utils.*;
 import static gitlet.Utils.readContents;
+import static java.lang.System.*;
 
 
 /**
@@ -21,7 +22,7 @@ public class Repository {
     /**
      * The current working directory.
      */
-    public static final File CWD = new File(System.getProperty("user.dir"));
+    public static final File CWD = new File(getProperty("user.dir"));
     /**
      * The .gitlet directory.
      */
@@ -63,7 +64,7 @@ public class Repository {
         File filePath = join(CWD, fileName);
         //检查想add的文件是否存在
         if (!filePath.exists()) {
-            System.out.println("File does not exist.");
+            out.println("File does not exist.");
             return;
         }
 
@@ -105,12 +106,12 @@ public class Repository {
 
         if (stage.getAddedFiles().isEmpty()
                 && stage.getRemovedFiles().isEmpty()) {
-            System.out.println("No changes added to the commit.");
+            out.println("No changes added to the commit.");
             return;
         }
 
         if (message.equals("")) {
-            System.out.println("Please enter a commit message.");
+            out.println("Please enter a commit message.");
         }
 
         // 获取目前commit，以及其parentList
@@ -168,7 +169,7 @@ public class Repository {
         boolean isTracked = current.getFile().containsKey(filename);
 
         if (!isTracked && !isStaged) {
-            System.out.println("No reason to remove the file.");
+            out.println("No reason to remove the file.");
             return;
         }
 
@@ -217,19 +218,19 @@ public class Repository {
     }
 
     public static void printCommit(Commit commit) {
-        System.out.println("===");
-        System.out.println("commit " + commit.getSelfHash());
+        out.println("===");
+        out.println("commit " + commit.getSelfHash());
 
         List<String> parent = commit.getParentList();
         if (parent.size() > 1) {
             String firstParent = parent.get(0).substring(0, 7);
             String secondParent = parent.get(1).substring(0, 7);
-            System.out.println("Merge: " + firstParent + " " + secondParent);
+            out.println("Merge: " + firstParent + " " + secondParent);
         }
 
-        System.out.println("Date: " + commit.getTimestamp());
-        System.out.println(commit.getMessage());
-        System.out.println();
+        out.println("Date: " + commit.getTimestamp());
+        out.println(commit.getMessage());
+        out.println();
 
     }
 
@@ -244,61 +245,52 @@ public class Repository {
 
                 if (commit.getMessage().equals(message)) {
                     found = true;
-                    System.out.println(commit.getSelfHash());
+                    out.println(commit.getSelfHash());
                 }
             }
         }
 
         if (!found) {
-            System.out.println("Found no commit with that message.");
+            out.println("Found no commit with that message.");
         }
     }
 
     public static void status() {
         List<String> branches = getBranches();
-        List<String> filesInCWD = plainFilenamesIn(CWD);
         String currentBranches = getCurrentBranch();
+        branches.remove(currentBranches);
+
+        //print branches
+        out.println("=== Branches ===");
+        out.println("*" + currentBranches);
+        branches.forEach(out::println);
+        out.println();
+
         StagingArea stage = getStage();
-
-        Commit currentCommit = getCurrentCommit();
-        HashMap<String, String> currentFiles = currentCommit.getFile();
-
-        System.out.println("=== Branches ===");
-        for (String branch : branches) {
-            if (branch.equals(currentBranches)) {
-                System.out.println("*" + currentBranches);
-            } else {
-                System.out.println(branch);
-            }
-        }
-
-        System.out.println();
-
         ArrayList<String> addedFiles = stage.getStagedFiles();
         Collections.sort(addedFiles);
 
-        System.out.println("=== Staged Files ===");
-        for (String filename : addedFiles) {
-            System.out.println(filename);
-        }
-
-        System.out.println();
+        //print staged Files
+        out.println("=== Staged Files ===");
+        for (String filename : addedFiles) out.println(filename);
+        out.println();
 
         // Display Removed Files
         ArrayList<String> removedFiles = stage.getRemovedFiles();
         Collections.sort(removedFiles);
 
-        System.out.println("=== Removed Files ===");
-        for (String file : removedFiles) {
-            System.out.println(file);
-        }
+        out.println("=== Removed Files ===");
+        removedFiles.forEach(out::println);
 
-        System.out.println();
+        out.println();
+
+        Commit currentCommit = getCurrentCommit();
+        HashMap<String, String> currentFiles = currentCommit.getFile();
 
         List<String> modifiedNotStaged = new ArrayList<>();
         List<String> untrackedFiles = new ArrayList<>();
 
-        for (String file : filesInCWD) {
+        for (String file : currentFiles.keySet()) {
 
             // 是否在缓存区？ 是否被commit追踪？ 是否修改过？
             boolean isStaged = isStaged(stage, file);
@@ -306,8 +298,7 @@ public class Repository {
             boolean isModified = isFileModified(file, currentFiles.get(file));
 
             //如果在缓存区，但是文件已经不存在了（删除）
-            if  (!isStaged(stage, file)
-                    && !removedFiles.contains(file)) {
+            if  (!isStaged && isTracked && !join(CWD, file).exists()) {
                 modifiedNotStaged.add(file + " (deleted)");
             } else if (isTracked && isModified && !isStaged) {
                 // 如果在现在commit，修改过了，但不在缓存区
@@ -319,17 +310,18 @@ public class Repository {
 
         }
 
-        System.out.println("=== Modifications Not Staged For Commit ===");
+        out.println("=== Modifications Not Staged For Commit ===");
         for (String file : modifiedNotStaged) {
-            System.out.println(file);
+            out.println(file);
         }
-        System.out.println();
+        out.println();
 
-        System.out.println("=== Untracked Files ===");
+        out.println("=== Untracked Files ===");
+
         for (String file : untrackedFiles) {
-            System.out.println(file);
+            out.println(file);
         }
-        System.out.println();
+        out.println();
 
 
     }
@@ -346,7 +338,7 @@ public class Repository {
         } else if (args.length == 1) {
             checkoutBranch(args[0]);
         } else {
-            System.out.println("Incorrect Operands");
+            out.println("Incorrect Operands");
         }
     }
 
@@ -360,7 +352,7 @@ public class Repository {
             commitToFind = getCommitFromHash(commitID);
 
             if (commitToFind == null) {
-                System.out.println("No commit with that id exists.");
+                out.println("No commit with that id exists.");
                 return;
             }
         }
@@ -368,7 +360,7 @@ public class Repository {
         String fileHash = commitToFind.getFile().get(filename);
 
         if (fileHash == null) {
-            System.out.println("File does not exist in that commit.");
+            out.println("File does not exist in that commit.");
             return;
         }
 
@@ -384,12 +376,12 @@ public class Repository {
         List<String> allBranches = getBranches();
 
         if (branchName.equals(currentBranch)) {
-            System.out.println("No need to checkout the current branch.");
+            out.println("No need to checkout the current branch.");
             return;
         }
 
         if (!allBranches.contains(branchName)) {
-            System.out.println("No such branch exists");
+            out.println("No such branch exists");
             return;
         }
 
@@ -401,7 +393,7 @@ public class Repository {
             for (String file : cwdFiles) {
                 if (!currentBranchFiles.contains(file)
                         && checkBranchFiles.contains(file)) {
-                    System.out.println("There is an untracked file in the way; "
+                    out.println("There is an untracked file in the way; "
                             + "delete it, or add and commit it first.");
                     return;
                 }
@@ -433,7 +425,7 @@ public class Repository {
         List<String> branchList = getBranches();
 
         if (branchList.contains(branchName)) {
-            System.out.println("A branch with that name already exists.");
+            out.println("A branch with that name already exists.");
             return;
         }
 
@@ -446,12 +438,12 @@ public class Repository {
         List<String> branchList = getBranches();
 
         if (branchName.equals(currentBranch)) {
-            System.out.println("Cannot remove the current branch.");
+            out.println("Cannot remove the current branch.");
             return;
         }
 
         if (!branchList.contains(branchName)) {
-            System.out.println("A branch with that name does not exist.");
+            out.println("A branch with that name does not exist.");
             return;
         }
 
@@ -464,7 +456,7 @@ public class Repository {
         Commit targetCommit = getCommitFromHash(commitID);
 
         if (targetCommit == null) {
-            System.out.println("No commit with that id exists.");
+            out.println("No commit with that id exists.");
             return;
         }
 
@@ -474,7 +466,7 @@ public class Repository {
 
         for (String file : cwdFiles) {
             if (!currentCommitFiles.contains(file) && targetCommitFiles.contains(file)) {
-                System.out.println("There is an untracked file in the way; "
+                out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
                 return;
             }
@@ -506,18 +498,18 @@ public class Repository {
         StagingArea stage = getStage();
         if (!stage.getAddedFiles().isEmpty()
                 || !stage.getRemovedFiles().isEmpty()) {
-            System.out.println("You have uncommitted changes.");
+            out.println("You have uncommitted changes.");
             return;
         }
 
         if (!getBranches().contains(branch)){
-            System.out.println("A branch with that name does not exist.");
+            out.println("A branch with that name does not exist.");
             return;
         }
         
         String currentBranch = getCurrentBranch();
         if (currentBranch.equals(branch)) {
-            System.out.println("Cannot merge a branch with itself.");
+            out.println("Cannot merge a branch with itself.");
             return;
         }
 
@@ -528,12 +520,12 @@ public class Repository {
                 (currentBranchHead,givenBranchHead);
 
         if (splitPoint.equals(givenBranchHead)){
-            System.out.println("Given branch is an ancestor of the current branch.");
+            out.println("Given branch is an ancestor of the current branch.");
             return;
         }
 
         if (splitPoint.equals(currentBranchHead)){
-            System.out.println("Current branch fast-forwarded.");
+            out.println("Current branch fast-forwarded.");
             checkoutBranch(branch);
             return;
         }
