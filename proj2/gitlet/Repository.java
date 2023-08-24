@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import static gitlet.Utils.*;
 import static gitlet.Utils.readContents;
 
-// TODO: any imports you need here
 
 /**
  * Represents a gitlet repository.
@@ -18,7 +17,6 @@ import static gitlet.Utils.readContents;
  */
 public class Repository {
     private String HEAD = "master";
-    private static StagingArea stage;
 
     /**
      * The current working directory.
@@ -54,11 +52,11 @@ public class Repository {
         Utils.writeObject(initCommitFile, initCommit);
 
         //将init commit HASH以String形式写入branches / master 文件
-        File MasterFile = join(BRANCHES_DIR, "master");
-        Utils.writeContents(MasterFile, initCommit.getSelfHash());
+        File masterFile = join(BRANCHES_DIR, "master");
+        Utils.writeContents(masterFile, initCommit.getSelfHash());
 
-        File HeadFile = join(BRANCHES_DIR, "head");
-        Utils.writeContents(HeadFile, "master");
+        File headFile = join(BRANCHES_DIR, "head");
+        Utils.writeContents(headFile, "master");
 
     }
 
@@ -66,7 +64,7 @@ public class Repository {
         File filePath = join(CWD, fileName);
         //检查想add的文件是否存在
         if (!filePath.exists()) {
-            System.out.println("File not exist.");
+            System.out.println("File does not exist.");
             return;
         }
 
@@ -84,15 +82,17 @@ public class Repository {
         StagingArea stage = getStage();
         Commit currentCommit = getCurrentCommit();
 
-        
-        if (currentCommit.getFile().containsKey(fileName) &&
-                currentCommit.getFile().get(fileName).equals(fileHash)) {
-            return;
 
+        if (currentCommit.getFile().containsKey(fileName)
+                && currentCommit.getFile().get(fileName).equals(fileHash)) {
+            if (stage.getRemovedFiles().contains(fileName)) {
+                stage.removeRemovedFile(fileName);
+            }
+            writeStage(stage);
+            return;
         }
         if (stage.getRemovedFiles().contains(fileName)) {
             stage.removeRemovedFile(fileName);
-
         }
         if (!stage.getAddedFiles().containsKey(fileName)) {
             stage.add(fileName, fileHash);
@@ -106,7 +106,7 @@ public class Repository {
 
         if (stage.getAddedFiles().isEmpty()
                 && stage.getRemovedFiles().isEmpty()) {
-            System.out.println("No changes added to commit");
+            System.out.println("No changes added to the commit.");
             return;
         }
 
@@ -309,12 +309,12 @@ public class Repository {
             //如果在缓存区，但是文件已经不存在了（删除）
             if (isStaged && !join(CWD, file).exists()) {
                 modifiedNotStaged.add(file + " (deleted)");
-            }
-            // 如果在现在commit，修改过了，但不在缓存区
+            } // 如果在现在commit，修改过了，但不在缓存区
+
             else if (isTracked && isModified && !isStaged) {
                 modifiedNotStaged.add(file + " (modified)");
-            }
-            //既不在缓存区又没有被现在commit tracked
+            }//既不在缓存区又没有被现在commit tracked
+            
             else if (!isStaged && !isTracked) {
                 untrackedFiles.add(file);
             }
@@ -399,8 +399,8 @@ public class Repository {
             for (String file : CWDFiles) {
                 if (!currentBranchFiles.contains(file)
                         && checkBranchFiles.contains(file)) {
-                    System.out.println("There is an untracked file in the way; " +
-                            "delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; "
+                            + "delete it, or add and commit it first.");
                     return;
                 }
             }
@@ -424,6 +424,37 @@ public class Repository {
         stage.clear();
         writeStage(stage);
 
+    }
+
+    public static void createBranch(String branchName) {
+        String currentBranchCommitHash = getBranchHead(getCurrentBranches()).getSelfHash();
+        List<String> branchList = getBranches();
+
+        if (branchList.contains(branchName)) {
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+
+        File branchFile = join(BRANCHES_DIR, branchName);
+        writeContents(branchFile, currentBranchCommitHash);
+    }
+
+    public static void rmBranch(String branchName) {
+        String currentBranch = getCurrentBranches();
+        List<String> branchList = getBranches();
+
+        if (branchName.equals(currentBranch)) {
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+
+        if (!branchList.contains(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+
+        File branchToRemove = join(BRANCHES_DIR, branchName);
+        branchToRemove.delete();
     }
 
     private static Commit getCommitFromHash(String hash) {
@@ -456,8 +487,8 @@ public class Repository {
     }
 
     private static Commit getCurrentCommit() {
-        File HeadFile = join(BRANCHES_DIR, "head");
-        String currentBranch = Utils.readContentsAsString(HeadFile);
+        File headFile = join(BRANCHES_DIR, "head");
+        String currentBranch = Utils.readContentsAsString(headFile);
 
         File branchFile = join(BRANCHES_DIR, currentBranch);
         String commitHash = readContentsAsString(branchFile);

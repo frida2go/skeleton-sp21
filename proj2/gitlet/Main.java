@@ -74,6 +74,14 @@ public class Main {
                 String[] checkoutArgs = Arrays.copyOfRange(args, 1, args.length);
                 checkout(checkoutArgs);
                 break;
+            case "branch":
+                isValidArgument(args, 2);
+                createBranch(args[1]);
+                break;
+            case "rm-branch":
+                isValidArgument(args,2);
+                rmBranch(args[1]);
+                break;
 
         }
 

@@ -1,12 +1,10 @@
 package gitlet;
 
-// TODO: any imports you need here
+
 
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -30,12 +28,12 @@ public class Commit implements Serializable {
      */
     private final String message;
     private final String selfHash;
-    public Date timestamp;
+    private final Date timestamp;
     private final List<String> parentList;
-    public HashMap<String, String> fileToBlobMap;
+    private final HashMap<String, String> fileToBlobMap;
 
 
-    /* TODO: fill in the rest of this class. */
+
     public Commit(String message, List<String> parents, HashMap<String, String> blob) {
         this.message = message;
         this.parentList = parents;
