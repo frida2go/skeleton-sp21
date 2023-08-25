@@ -525,15 +525,15 @@ public class Repository {
         Commit currentBranchHead = getBranchHead(currentBranch);
         Commit givenBranchHead = getBranchHead(branch);
 
-        Commit splitPoint = findLatestCommonAncestor
+        String splitPointHash = findLatestCommonAncestor
                 (currentBranchHead, givenBranchHead);
 
-        if (splitPoint.equals(givenBranchHead)) {
+        if (splitPointHash.equals(givenBranchHead.getSelfHash())) {
             out.println("Given branch is an ancestor of the current branch.");
             return;
         }
 
-        if (splitPoint.equals(currentBranchHead)) {
+        if (splitPointHash.equals(currentBranchHead.getSelfHash())) {
             out.println("Current branch fast-forwarded.");
             checkoutBranch(branch);
             return;
@@ -637,10 +637,10 @@ public class Repository {
         return gitletDir.exists() && gitletDir.isDirectory();
     }
 
-    private static List<Commit> getAllAncestors(Commit commit) {
-        List<Commit> ancestors = new ArrayList<>();
+    private static List<String> getAllAncestors(Commit commit) {
+        List<String> ancestors = new ArrayList<>();
         while (commit != null) {
-            ancestors.add(commit);
+            ancestors.add(commit.getSelfHash());
             String parentHash = commit.getFirstParent();
             if (parentHash == null){
                 commit = null;
@@ -651,13 +651,13 @@ public class Repository {
         return ancestors;
     }
 
-    private static Commit findLatestCommonAncestor(Commit commit1, Commit commit2) {
-        List<Commit> ancestorsCommit1 = getAllAncestors(commit1);
-        List<Commit> ancestorsCommit2 = getAllAncestors(commit2);
+    private static String findLatestCommonAncestor(Commit commit1, Commit commit2) {
+        List<String> ancestorsCommit1 = getAllAncestors(commit1);
+        List<String> ancestorsCommit2 = getAllAncestors(commit2);
 
-        for (Commit commit : ancestorsCommit1) {
-            if (ancestorsCommit2.contains(commit)) {
-                return commit;
+        for (String commitHash : ancestorsCommit1) {
+            if (ancestorsCommit2.contains(commitHash)) {
+                return commitHash;
             }
         }
         return null;
