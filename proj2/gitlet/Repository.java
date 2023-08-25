@@ -528,6 +528,10 @@ public class Repository {
         String splitPointHash = findLatestCommonAncestor
                 (currentBranchHead, givenBranchHead);
 
+        if (splitPointHash == null) {
+            throw new IllegalStateException("No common ancestor found.");
+        }
+
         if (splitPointHash.equals(givenBranchHead.getSelfHash())) {
             out.println("Given branch is an ancestor of the current branch.");
             return;
@@ -596,7 +600,7 @@ public class Repository {
             return getCommitFromHash(commitHash);
         }
 
-        return null;
+        throw new IllegalStateException("No branch found.");
     }
 
     private static Set<String> getFilesFromBranchHead(String branchName) {
