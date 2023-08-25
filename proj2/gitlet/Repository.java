@@ -637,31 +637,19 @@ public class Repository {
         return gitletDir.exists() && gitletDir.isDirectory();
     }
 
-    private static LinkedHashSet<Commit> getAllAncestors(Commit commit) {
-        LinkedHashSet<Commit> ancestors = new LinkedHashSet<>();
-        if (commit == null) {
-            return ancestors;
-        }
-
-        Stack<Commit> toVisit = new Stack<>();
-        toVisit.push(commit);
-
-        while (!toVisit.empty()) {
-            Commit current = toVisit.pop();
-            if (!ancestors.contains(current)) {
-                ancestors.add(current);
-                for (String parentID : current.getParentList()) {
-                    Commit parent = getCommitFromHash(parentID);
-                    toVisit.push(parent);
-                }
-            }
+    private static List<Commit> getAllAncestors(Commit commit) {
+        List<Commit> ancestors = new ArrayList<>();
+        while (commit != null) {
+            ancestors.add(commit);
+            String parentHash = commit.getFirstParent();
+            commit = getCommitFromHash(parentHash);
         }
         return ancestors;
     }
 
     private static Commit findLatestCommonAncestor(Commit commit1, Commit commit2) {
-        LinkedHashSet<Commit> ancestorsCommit1 = getAllAncestors(commit1);
-        LinkedHashSet<Commit> ancestorsCommit2 = getAllAncestors(commit2);
+        List<Commit> ancestorsCommit1 = getAllAncestors(commit1);
+        List<Commit> ancestorsCommit2 = getAllAncestors(commit2);
 
         for (Commit commit : ancestorsCommit1) {
             if (ancestorsCommit2.contains(commit)) {
