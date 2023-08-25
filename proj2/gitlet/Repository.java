@@ -661,7 +661,7 @@ public class Repository {
 
     private static Commit findLatestCommonAncestor(Commit commit1, Commit commit2) {
         LinkedHashSet<Commit> ancestorsCommit1 = getAllAncestors(commit1);
-        LinkedHashSet<Commit> ancestorsCommit2 = getAllAncestors(commit1);
+        LinkedHashSet<Commit> ancestorsCommit2 = getAllAncestors(commit2);
 
         for (Commit commit : ancestorsCommit1) {
             if (ancestorsCommit2.contains(commit)) {

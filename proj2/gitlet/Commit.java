@@ -75,5 +75,12 @@ public class Commit implements Serializable {
     public HashMap<String, String> getFile() {
         return new HashMap<>(fileToBlobMap);
     }
+
+    public String getFirstParent() {
+        if (!parentList.isEmpty()){
+            return parentList.get(0);
+        }
+        return null;
+    }
 }
 
