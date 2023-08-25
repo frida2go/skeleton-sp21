@@ -77,10 +77,18 @@ public class Commit implements Serializable {
     }
 
     public String getFirstParent() {
-        if (!parentList.isEmpty()){
+        if (!parentList.isEmpty()) {
             return parentList.get(0);
         }
         return null;
+    }
+
+    public void removeFiles(String filename) {
+        fileToBlobMap.remove(filename);
+    }
+
+    public void addFiles(String filename,String fileHash) {
+        fileToBlobMap.put(filename,fileHash);
     }
 }
 

@@ -504,44 +504,110 @@ public class Repository {
     }
 
     public static void merge(String branch) {
-        StagingArea stage = getStage();
-        if (!stage.getAddedFiles().isEmpty()
-                || !stage.getRemovedFiles().isEmpty()) {
-            out.println("You have uncommitted changes.");
+        if (!canMerge(branch)) {
             return;
+        }
+
+        StagingArea stage = getStage();
+
+        String currentBranch = getCurrentBranch();
+        Commit currentBranchHead = getBranchHead(currentBranch);
+
+        Commit givenBranchHead = getBranchHead(branch);
+
+        String splitPointHash = findLatestCommonAncestor
+                (currentBranchHead, givenBranchHead);
+        Commit splitPoint = getCommitFromHash(splitPointHash);
+
+        if (!canMerge2(givenBranchHead,currentBranchHead,splitPointHash,branch)){
+            return;
+        }
+
+        Set<String> allfiles = new HashSet<>();
+        allfiles.addAll(splitPoint.getFile().keySet());
+        allfiles.addAll(currentBranchHead.getFile().keySet());
+        allfiles.addAll(givenBranchHead.getFile().keySet());
+
+        for (String filename: allfiles) {
+            String splitVersion = splitPoint.getFile().getOrDefault(filename, null);
+            String currentVersion = currentBranchHead.getFile().getOrDefault(filename, null);
+            String givenVersion = givenBranchHead.getFile().getOrDefault(filename, null);
+
+            // modified in current but not in given => current
+            // modified in given but not in current => given
+            // modified in given and in current
+            // same => remain
+            // not same => conflict
+            // not present in split
+            // not in given but in current => current
+            // not in current but in given => given
+            // unmodified in current but not present in given => Remove
+            // unmodified in given but not present in current => Remain remove
+
+            if (splitVersion == null) {
+                if (currentVersion == null && givenVersion != null) {
+                    currentBranchHead.addFiles(filename, givenVersion);
+                }
+            } else {
+                if (givenVersion != null && currentVersion != null) {
+                    if (!splitVersion.equals(givenVersion)) {
+                        if (splitVersion.equals(currentVersion)) {
+                            currentBranchHead.removeFiles(filename);
+                            currentBranchHead.addFiles(filename, givenVersion);
+                        }
+                        if (!splitVersion.equals(currentVersion)) {
+                            return; // conflict
+                        }
+                    }
+                } else if (givenVersion == null
+                        && splitVersion.equals(currentVersion)) {
+                // unmodified in current but not present in given => remove
+                currentBranchHead.removeFiles(filename);
+                }
+            }
+        }
+
+    }
+
+    private static boolean canMerge(String branch){
+        StagingArea stage = getStage();
+        if (stage.isEmptyStage()) {
+            out.println("You have uncommitted changes.");
+            return false;
         }
 
         if (!getBranches().contains(branch)) {
             out.println("A branch with that name does not exist.");
-            return;
+            return false;
         }
 
         String currentBranch = getCurrentBranch();
         if (currentBranch.equals(branch)) {
             out.println("Cannot merge a branch with itself.");
-            return;
+            return false;
         }
 
-        Commit currentBranchHead = getBranchHead(currentBranch);
-        Commit givenBranchHead = getBranchHead(branch);
+        return true;
+    }
 
-        String splitPointHash = findLatestCommonAncestor
-                (currentBranchHead, givenBranchHead);
-
+    private static boolean canMerge2(Commit givenBranchHead,
+                                     Commit currentBranchHead, String splitPointHash,
+                                     String branch) {
         if (splitPointHash == null) {
             throw new IllegalStateException("No common ancestor found.");
         }
 
         if (splitPointHash.equals(givenBranchHead.getSelfHash())) {
             out.println("Given branch is an ancestor of the current branch.");
-            return;
+            return false;
         }
 
         if (splitPointHash.equals(currentBranchHead.getSelfHash())) {
             out.println("Current branch fast-forwarded.");
             checkoutBranch(branch);
-            return;
+            return false;
         }
+        return true;
     }
 
 
@@ -646,7 +712,7 @@ public class Repository {
         while (commit != null) {
             ancestors.add(commit.getSelfHash());
             String parentHash = commit.getFirstParent();
-            if (parentHash == null){
+            if (parentHash == null) {
                 commit = null;
             } else {
                 commit = getCommitFromHash(parentHash);

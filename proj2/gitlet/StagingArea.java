@@ -52,5 +52,9 @@ public class StagingArea implements Serializable {
         removedFiles.remove(filename);
     }
 
+    public boolean isEmptyStage() {
+        return (addedFiles.isEmpty()&& removedFiles.isEmpty());
+    }
+
 
 }
