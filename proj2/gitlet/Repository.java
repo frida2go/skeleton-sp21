@@ -642,7 +642,11 @@ public class Repository {
         while (commit != null) {
             ancestors.add(commit);
             String parentHash = commit.getFirstParent();
-            commit = getCommitFromHash(parentHash);
+            if (parentHash == null){
+                commit = null;
+            } else {
+                commit = getCommitFromHash(parentHash);
+            }
         }
         return ancestors;
     }
