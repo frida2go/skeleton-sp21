@@ -552,6 +552,7 @@ public class Repository {
                     && givenVersion != null && currentVersion == null;
 
             boolean onlyModifiedInGiven = splitVersion != null
+                    && givenVersion != null
                     && Objects.equals(splitVersion,currentVersion)
                     && !Objects.equals(splitVersion,givenVersion);
 
@@ -559,20 +560,16 @@ public class Repository {
                     && Objects.equals(splitVersion,currentVersion)
                     && givenVersion == null;
 
-            if (onlyPresentInGiven) {
+            if (onlyPresentInGiven || onlyModifiedInGiven) {
                 checkoutFile(filename,givenBranchHead.getSelfHash());
                 stage.add(filename,givenVersion);
-            }
-            if (onlyModifiedInGiven){
-                checkoutFile(filename,givenBranchHead.getSelfHash());
-                stage.add(filename, givenVersion);
             }
 
             if (onlyDeletedInGiven) {
                 currentBranchHead.removeFiles(filename);
             }
 
-            // 三者都不为null，curr 跟 given 都不相等；
+            // conflict
             if (splitVersion != null
                     && givenVersion != null && currentVersion != null
                     && !Objects.equals(splitVersion,givenVersion)
