@@ -562,7 +562,7 @@ public class Repository {
 
             if (onlyPresentInGiven || onlyModifiedInGiven) {
                 checkoutFile(filename,givenBranchHead.getSelfHash());
-                stage.add(filename,givenVersion);
+                //stage.add(filename,givenVersion);
             }
 
             if (onlyDeletedInGiven) {
