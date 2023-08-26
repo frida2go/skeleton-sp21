@@ -514,7 +514,6 @@ public class Repository {
         Commit currentBranchHead = getBranchHead(currentBranch);
 
         Commit givenBranchHead = getBranchHead(branch);
-
         String splitPointHash = findLatestCommonAncestor
                 (currentBranchHead, givenBranchHead);
         Commit splitPoint = getCommitFromHash(splitPointHash);
@@ -549,18 +548,27 @@ public class Repository {
             // if files only modified(delete) in given, change to given.
             boolean conflict = false;
 
-            if (splitVersion == null && givenVersion != null && currentVersion == null) {
-                checkoutFile(filename,givenVersion);
+            boolean onlyPresentInGiven = splitVersion == null
+                    && givenVersion != null && currentVersion == null;
+
+            boolean onlyModifiedInGiven = splitVersion != null
+                    && Objects.equals(splitVersion,currentVersion)
+                    && !Objects.equals(splitVersion,givenVersion);
+
+            boolean onlyDeletedInGiven = splitVersion != null
+                    && Objects.equals(splitVersion,currentVersion)
+                    && givenVersion == null;
+
+            if (onlyPresentInGiven) {
+                checkoutFile(filename,givenBranchHead.getSelfHash());
                 stage.add(filename,givenVersion);
             }
-            if (splitVersion != null
-                    && Objects.equals(splitVersion,currentVersion)
-                    && !Objects.equals(splitVersion,givenVersion)) {
-                checkoutFile(filename,givenVersion);
+            if (onlyModifiedInGiven){
+                checkoutFile(filename,givenBranchHead.getSelfHash());
                 stage.add(filename, givenVersion);
             }
 
-            if (splitVersion != null && Objects.equals(splitVersion,currentVersion) && givenVersion == null ) {
+            if (onlyDeletedInGiven) {
                 currentBranchHead.removeFiles(filename);
             }
 
@@ -773,7 +781,7 @@ public class Repository {
 
     private static void mergeCommit (Commit currentHead, Commit otherHead,String branch,String currentBranch) {
         List<String> parents = new ArrayList<>();
-        String message = "Merged " + branch + " into " + currentBranch;
+        String message = "Merged " + branch + " into " + currentBranch +".";
 
         parents.add(currentHead.getSelfHash());
         parents.add(otherHead.getSelfHash());
