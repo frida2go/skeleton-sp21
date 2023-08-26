@@ -567,6 +567,7 @@ public class Repository {
 
             if (onlyDeletedInGiven) {
                 currentBranchHead.removeFiles(filename);
+                rmFile(filename);
             }
 
             // conflict
@@ -590,6 +591,10 @@ public class Repository {
                     && !Objects.equals(splitVersion,givenVersion)) {
                 conflict = true;
             }
+            if (conflict) {
+                String conflictMessage = generateConflictContent(currentVersion,givenVersion);
+
+            }
         }
         
         mergeCommit(currentBranchHead,givenBranchHead,branch,currentBranch);
@@ -597,6 +602,8 @@ public class Repository {
 
 
     }
+
+
 
     private static boolean canMerge(String branch){
         StagingArea stage = getStage();
@@ -762,13 +769,7 @@ public class Repository {
         return null;
     }
 
-    private boolean isConflict(String splitVersion, String currentVersion, String givenVersion) {
-        return !Objects.equals(currentVersion, givenVersion) &&
-                !Objects.equals(splitVersion, currentVersion) &&
-                !Objects.equals(splitVersion, givenVersion);
-    }
-
-    private String generateConflictContent(String currentVersion, String givenVersion) {
+    private static String generateConflictContent(String currentVersion, String givenVersion) {
         return "<<<<<<< HEAD\n" +
                 (currentVersion == null ? "" : currentVersion) +
                 "=======\n" +
