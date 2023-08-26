@@ -578,7 +578,6 @@ public class Repository {
                     && !Objects.equals(splitVersion,currentVersion)) {
                 conflict = true;
             }
-
             // split不为null，given中被删了，curr跟split不相等；
             if (splitVersion != null
                     && givenVersion == null && currentVersion != null
@@ -599,7 +598,6 @@ public class Repository {
         }
         
         mergeCommit(currentBranchHead,givenBranchHead,branch,currentBranch);
-        writeStage(stage);
 
 
     }
