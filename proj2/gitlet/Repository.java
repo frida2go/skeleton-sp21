@@ -584,17 +584,10 @@ public class Repository {
                     && !Objects.equals(splitVersion,givenVersion)) {
                 conflict = true;
             }
-
-            if (!conflict) {
-                String commitMessage = "Merged " + branch + " into " + currentBranch;
-                mergeCommit(currentBranchHead,givenBranchHead,branch,currentBranch);
-                writeStage(stage);
-            }
-
-
-
-
         }
+        
+        mergeCommit(currentBranchHead,givenBranchHead,branch,currentBranch);
+        writeStage(stage);
 
 
     }
