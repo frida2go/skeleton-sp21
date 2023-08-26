@@ -567,7 +567,8 @@ public class Repository {
 
             if (onlyDeletedInGiven) {
                 currentBranchHead.removeFiles(filename);
-                rmFile(filename);
+                File toRemove = join(CWD,filename);
+                Utils.restrictedDelete(toRemove);
             }
 
             // conflict
