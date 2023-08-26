@@ -136,7 +136,7 @@ public class Repository {
                 //将commit写入文件夹
                 Commit newCommit = new Commit(message, parentList, currentFileList);
                 writeCommit(newCommit);
-                updateBranch(newCommit.getSelfHash());
+                updateBranch(newCommit);
             }
         }
 
@@ -147,12 +147,12 @@ public class Repository {
     }
 
     //更新Branch，将head指向newCommit
-    private static void updateBranch(String newCommitHash) {
+    private static void updateBranch(Commit newCommit) {
         File headFile = join(BRANCHES_DIR, "head");
         String activeBranch = Utils.readContentsAsString(headFile);
 
         File branchFile = join(BRANCHES_DIR, activeBranch);
-        Utils.writeContents(branchFile, newCommitHash);
+        Utils.writeContents(branchFile, newCommit.getSelfHash());
     }
 
     //将commit object写入文件
@@ -523,55 +523,85 @@ public class Repository {
             return;
         }
 
-        Set<String> allfiles = new HashSet<>();
-        allfiles.addAll(splitPoint.getFile().keySet());
-        allfiles.addAll(currentBranchHead.getFile().keySet());
-        allfiles.addAll(givenBranchHead.getFile().keySet());
+        Set<String> allFiles = new HashSet<>();
+        allFiles.addAll(splitPoint.getFile().keySet());
+        allFiles.addAll(currentBranchHead.getFile().keySet());
+        allFiles.addAll(givenBranchHead.getFile().keySet());
 
-        for (String filename: allfiles) {
+        for (String filename: allFiles) {
             String splitVersion = splitPoint.getFile().getOrDefault(filename, null);
             String currentVersion = currentBranchHead.getFile().getOrDefault(filename, null);
             String givenVersion = givenBranchHead.getFile().getOrDefault(filename, null);
 
+
+
             // modified in current but not in given => current
             // modified in given but not in current => given
             // modified in given and in current
-            // same => remain
-            // not same => conflict
+                // same => remain
+                // not same => conflict
             // not present in split
-            // not in given but in current => current
-            // not in current but in given => given
+                // not in given but in current => current
+                // not in current but in given => given
             // unmodified in current but not present in given => Remove
             // unmodified in given but not present in current => Remain remove
 
-            if (splitVersion == null) {
-                if (currentVersion == null && givenVersion != null) {
-                    currentBranchHead.addFiles(filename, givenVersion);
-                }
-            } else {
-                if (givenVersion != null && currentVersion != null) {
-                    if (!splitVersion.equals(givenVersion)) {
-                        if (splitVersion.equals(currentVersion)) {
-                            currentBranchHead.removeFiles(filename);
-                            currentBranchHead.addFiles(filename, givenVersion);
-                        }
-                        if (!splitVersion.equals(currentVersion)) {
-                            return; // conflict
-                        }
-                    }
-                } else if (givenVersion == null
-                        && splitVersion.equals(currentVersion)) {
-                // unmodified in current but not present in given => remove
-                currentBranchHead.removeFiles(filename);
-                }
+            // if files only modified(delete) in given, change to given.
+            boolean conflict = false;
+
+            if (splitVersion == null && givenVersion != null && currentVersion == null) {
+                stage.add(filename,givenVersion);
             }
+            if (splitVersion != null
+                    && Objects.equals(splitVersion,currentVersion)
+                    && !Objects.equals(splitVersion,givenVersion)) {
+                stage.add(filename, givenVersion);
+            }
+
+            if (splitVersion != null && Objects.equals(splitVersion,currentVersion) && givenVersion == null ) {
+                stage.removeAddedFile(filename);
+                currentBranchHead.removeFiles(filename);
+            }
+
+            // 三者都不为null，curr 跟 given 都不相等；
+            if (splitVersion != null
+                    && givenVersion != null && currentVersion != null
+                    && !Objects.equals(splitVersion,givenVersion)
+                    && !Objects.equals(splitVersion,currentVersion)) {
+                conflict = true;
+            }
+
+            // split不为null，given中被删了，curr跟split不相等；
+            if (splitVersion != null
+                    && givenVersion == null && currentVersion != null
+                    && !Objects.equals(splitVersion,currentVersion)) {
+                conflict = true;
+            }
+
+            // split不为null，curr中被删了，given跟split不相等；
+            if (splitVersion != null
+                    && givenVersion != null && currentVersion == null
+                    && !Objects.equals(splitVersion,givenVersion)) {
+                conflict = true;
+            }
+
+            if (!conflict) {
+                String commitMessage = "Merged " + branch + " into " + currentBranch;
+                mergeCommit(currentBranchHead,givenBranchHead,branch,currentBranch);
+                writeStage(stage);
+            }
+
+
+
+
         }
+
 
     }
 
     private static boolean canMerge(String branch){
         StagingArea stage = getStage();
-        if (stage.isEmptyStage()) {
+        if (!stage.isEmptyStage()) {
             out.println("You have uncommitted changes.");
             return false;
         }
@@ -731,6 +761,33 @@ public class Repository {
             }
         }
         return null;
+    }
+
+    private boolean isConflict(String splitVersion, String currentVersion, String givenVersion) {
+        return !Objects.equals(currentVersion, givenVersion) &&
+                !Objects.equals(splitVersion, currentVersion) &&
+                !Objects.equals(splitVersion, givenVersion);
+    }
+
+    private String generateConflictContent(String currentVersion, String givenVersion) {
+        return "<<<<<<< HEAD\n" +
+                (currentVersion == null ? "" : currentVersion) +
+                "=======\n" +
+                (givenVersion == null ? "" : givenVersion) +
+                ">>>>>>>";
+    }
+
+    private static void mergeCommit (Commit currentHead, Commit otherHead,String branch,String currentBranch) {
+        List<String> parents = new ArrayList<>();
+        String message = "Merged " + branch + " into " + currentBranch;
+
+        parents.add(currentHead.getSelfHash());
+        parents.add(otherHead.getSelfHash());
+        HashMap<String,String> blob = currentHead.getFile();
+
+        Commit newCommit = new Commit(message, parents, blob);
+        writeCommit(newCommit);
+        updateBranch(newCommit);
     }
 
 
