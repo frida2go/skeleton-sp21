@@ -550,16 +550,17 @@ public class Repository {
             boolean conflict = false;
 
             if (splitVersion == null && givenVersion != null && currentVersion == null) {
+                checkoutFile(filename,givenVersion);
                 stage.add(filename,givenVersion);
             }
             if (splitVersion != null
                     && Objects.equals(splitVersion,currentVersion)
                     && !Objects.equals(splitVersion,givenVersion)) {
+                checkoutFile(filename,givenVersion);
                 stage.add(filename, givenVersion);
             }
 
             if (splitVersion != null && Objects.equals(splitVersion,currentVersion) && givenVersion == null ) {
-                stage.removeAddedFile(filename);
                 currentBranchHead.removeFiles(filename);
             }
 
