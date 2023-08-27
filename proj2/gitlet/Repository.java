@@ -639,7 +639,7 @@ public class Repository {
 
         if (splitPointHash.equals(currentBranchHead.getSelfHash())) {
             out.println("Current branch fast-forwarded.");
-            checkoutBranch(branch);
+            //checkoutBranch(branch);
             return false;
         }
         return true;
