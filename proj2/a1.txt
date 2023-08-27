@@ -1,7 +1,1 @@
-<<<<<<< HEAD
-ffff<<<<<<< HEAD
-=======
-asdl;fkjas;dfj
->>>>>>>
-=======
->>>>>>>
+sdfasdfabc
