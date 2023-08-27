@@ -593,7 +593,7 @@ public class Repository {
             }
             if (conflict) {
                 generateConflictContent(currentVersion,givenVersion,
-                        currentBranchHead,givenBranchHead,filename);
+                        currentBranchHead,filename);
                 out.println("Encountered a merge conflict.");
             }
         }
