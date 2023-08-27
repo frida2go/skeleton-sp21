@@ -647,6 +647,7 @@ public class Repository {
     }
 
 
+
     private static Commit getCommitFromHash(String hash) {
         List<String> allCommits = plainFilenamesIn(COMMITS_DIR);
 
@@ -770,12 +771,12 @@ public class Repository {
     }
 
     private static void generateConflictContent(String currentVersion, String givenVersion,
-                                                  Commit curr, Commit given,String filename) {
+                                                  Commit curr,String filename) {
 
         String content = "<<<<<<< HEAD\n" +
-                (currentVersion == null ? "" : readFileFromCommit(curr,currentVersion)) +
+                (currentVersion == null ? "" : readFileFromHash(currentVersion)) +
                 "=======\n" +
-                (givenVersion == null ? "" : readFileFromCommit(given,givenVersion)) +
+                (givenVersion == null ? "" : readFileFromHash(givenVersion)) +
                 ">>>>>>>";
 
         File newFile = join(CWD,filename);
@@ -783,8 +784,8 @@ public class Repository {
 
         String fileHash = sha1(content);
         File blob = join(BLOBS_DIR,fileHash);
-        writeContents(blob,content);
-        curr.addFiles(filename,fileHash);
+        //writeContents(blob,content);
+        //curr.addFiles(filename,fileHash);
 
     }
 
@@ -801,7 +802,7 @@ public class Repository {
         updateBranch(newCommit);
     }
 
-    private static String readFileFromCommit(Commit commit, String fileHash) {
+    private static String readFileFromHash(String fileHash) {
         File file = join(BLOBS_DIR,fileHash);
         return readContentsAsString(file);
 
