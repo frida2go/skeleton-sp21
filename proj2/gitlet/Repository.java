@@ -572,26 +572,9 @@ public class Repository {
             }
 
             // conflict
-            if (splitVersion != null
-                    && givenVersion != null && currentVersion != null
+            if (!Objects.equals(givenVersion,splitVersion)
                     && !Objects.equals(splitVersion,givenVersion)
                     && !Objects.equals(splitVersion,currentVersion)) {
-                conflict = true;
-            }
-            // split不为null，given中被删了，curr跟split不相等；
-            if (splitVersion != null
-                    && givenVersion == null && currentVersion != null
-                    && !Objects.equals(splitVersion,currentVersion)) {
-                conflict = true;
-            }
-
-            // split不为null，curr中被删了，given跟split不相等；
-            if (splitVersion != null
-                    && givenVersion != null && currentVersion == null
-                    && !Objects.equals(splitVersion,givenVersion)) {
-                conflict = true;
-            }
-            if (conflict) {
                 generateConflictContent(currentVersion,givenVersion,
                         currentBranchHead,filename);
                 out.println("Encountered a merge conflict.");
