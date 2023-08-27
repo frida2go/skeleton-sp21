@@ -592,8 +592,9 @@ public class Repository {
                 conflict = true;
             }
             if (conflict) {
-                String conflictMessage = generateConflictContent(currentVersion,givenVersion);
-
+                generateConflictContent(currentVersion,givenVersion,
+                        currentBranchHead,givenBranchHead,filename);
+                out.println("Encountered a merge conflict.");
             }
         }
         
@@ -768,12 +769,23 @@ public class Repository {
         return null;
     }
 
-    private static String generateConflictContent(String currentVersion, String givenVersion) {
-        return "<<<<<<< HEAD\n" +
-                (currentVersion == null ? "" : currentVersion) +
+    private static void generateConflictContent(String currentVersion, String givenVersion,
+                                                  Commit curr, Commit given,String filename) {
+
+        String content = "<<<<<<< HEAD\n" +
+                (currentVersion == null ? "" : readFileFromCommit(curr,currentVersion)) +
                 "=======\n" +
-                (givenVersion == null ? "" : givenVersion) +
+                (givenVersion == null ? "" : readFileFromCommit(given,givenVersion)) +
                 ">>>>>>>";
+
+        File newFile = join(CWD,filename);
+        writeContents(newFile,content);
+
+        String fileHash = sha1(content);
+        File blob = join(BLOBS_DIR,fileHash);
+        writeContents(blob,content);
+        curr.addFiles(filename,fileHash);
+
     }
 
     private static void mergeCommit (Commit currentHead, Commit otherHead,String branch,String currentBranch) {
@@ -787,6 +799,13 @@ public class Repository {
         Commit newCommit = new Commit(message, parents, blob);
         writeCommit(newCommit);
         updateBranch(newCommit);
+    }
+
+    private static String readFileFromCommit(Commit commit, String fileHash) {
+        File file = join(BLOBS_DIR,fileHash);
+        return readContentsAsString(file);
+
+
     }
 
 
